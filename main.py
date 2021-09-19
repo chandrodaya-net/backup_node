@@ -14,7 +14,7 @@ def cmd_backup_script():
                                                            bkup=config.full_path_backup_name)
 
 def s3_download(source_file):
-    return "cd {wdir}; s3cmd get s3://{space}/{src} {src} ; tar -xzvf {src} ; rm {src} ".format(wdir=config.workspace_new,
+    return "cd {wdir}; s3cmd get s3://{space}/{src} {src} ; tar -xzvf {src} ; rm {src}".format(wdir=config.workspace_new,
                                                                                                     space=config.digital_ocean_space,
                                                                                                     src =source_file)
     
@@ -75,9 +75,10 @@ CMD_MAP = { 'start_node': "sudo systemctl start {}".format(config.binary_node),
         'set_home_binary_systemd_file': set_home_binary_systemd_file(),
         'set_home_binary_profile_file': set_home_binary_profile_file(),
         'set_home_binary': 'set_home_binary_systemd_file; set_home_binary_profile_file',
+        'EXIT': "exit from the program",
         'test1': 'pwd; ls',
         'test2': 'lsmaldsa',
-        'EXIT': "exit from the program"
+        
     }
 
 
