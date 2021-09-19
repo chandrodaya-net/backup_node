@@ -1,0 +1,2 @@
+version-1.0.0 (19.09.2021)
+	- Script created 
