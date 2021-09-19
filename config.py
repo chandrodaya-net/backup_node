@@ -24,5 +24,8 @@ digital_ocean_space = "chandrodaya"
 full_path_source_data = "{}/.{}".format(workspace_current, binary_node)
 full_path_backup_name = "{}/{}".format(workspace_new, binary_node)
 
+# path to the blockchain datafolder
+home_path =  "{}/.{}".format(workspace_new, binary_node)
+
 log_file_path="/home/dau/workspace/python/github.com/dauTT/backup/logs/backup.log"
 log_level = "DEBUG" # DEBUG, INFO

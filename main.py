@@ -2,7 +2,8 @@ import subprocess
 from utils import create_logger
 import config
 import json
-import version 
+import version
+from setuptools.sandbox import _execfile
  
 logger = create_logger(config.log_file_path, __name__ , config.log_level, True)
 
@@ -16,6 +17,38 @@ def s3_download(source_file):
     return "cd {wdir}; s3cmd get s3://{space}/{src} {src} ; tar -xzvf {src} ; rm {src} ".format(wdir=config.workspace_new,
                                                                                                     space=config.digital_ocean_space,
                                                                                                     src =source_file)
+    
+
+def escape_slash(name):
+    return name.replace("/", "\/")
+
+def set_home_binary_systemd_file():
+    HOME_PATH = escape_slash(config.home_path) 
+    HOME = 'HOME_' + config.binary_node.upper()
+    #return """sed -i "s/\"{HOME}=*.*/\"{HOME}={HOME_PATH}\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload""".format(HOME=HOME,
+    return """sed -i "s/\\"{HOME}=*.*/\\"{HOME}={HOME_PATH}\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload""".format(HOME=HOME,
+                                                                                                                                        HOME_PATH=HOME_PATH)
+
+
+def set_home_binary_profile_file():
+    HOME_PATH = escape_slash(config.home_path) 
+    HOME = 'HOME_' + config.binary_node.upper()
+    # the cmd: "source . ~/.profile" does not work.
+    # Therefore we have repalce with an equivalent one: ". ~/.profile"
+    return """sed -i "s/{HOME}=*.*/{HOME}={HOME_PATH}/" ~/.profile ; . ~/.profile""".format(HOME=HOME,
+                                                                             HOME_PATH=HOME_PATH)
+
+
+def set_home_binary():
+    logger.info("************** SETUP HOME BINARY ******************")
+    for cmd_key in ['set_home_binary_systemd_file', 'set_home_binary_profile_file'] :
+        cmd_value = CMD_MAP[cmd_key]
+        result = execute(cmd_value)
+        if result != 0 :
+            logger.info("************** SETUP FAILED! **********************")
+            break 
+    logger.info("************** END SETUP **************************")
+    
 
 def run_backup():
     logger.info("************** START BACKUP ***********************")
@@ -30,7 +63,8 @@ def run_backup():
             logger.info("************** BACKUP FAILED! ***********************")
             break 
     logger.info("************** END BACKUP ***********************")
-    
+
+
 CMD_MAP = { 'start_node': "sudo systemctl start {}".format(config.binary_node),
         'stop_node': "sudo systemctl stop {}; sleep 2s".format(config.binary_node),
         'start_alert': "sudo systemctl start {}".format(config.py_alert),
@@ -38,6 +72,9 @@ CMD_MAP = { 'start_node': "sudo systemctl start {}".format(config.binary_node),
         'backup_script': cmd_backup_script(),
         'run_backup': 'stop_node; backup_script',
         's3_download': s3_download("source_file?"),
+        'set_home_binary_systemd_file': set_home_binary_systemd_file(),
+        'set_home_binary_profile_file': set_home_binary_profile_file(),
+        'set_home_binary': 'set_home_binary_systemd_file; set_home_binary_profile_file',
         'test1': 'pwd; ls',
         'test2': 'lsmaldsa',
         'EXIT': "exit from the program"
@@ -78,6 +115,8 @@ def repl():
             cmd_value = s3_download(source_file)
         elif cmd_key == 'run_backup':
             run_backup()
+        elif cmd_key == 'set_home_binary':
+            set_home_binary()
         else:
             cmd_value = CMD_MAP.get(cmd_key, None)
             if cmd_value is None:

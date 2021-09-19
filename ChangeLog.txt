@@ -1,2 +1,6 @@
-version-1.0.0 (19.09.2021)
+v1.0.0 (19.09.2021)
 	- Script created 
+	
+	
+v1.0.1 (19.09.2021)
+	- Add set home methods
