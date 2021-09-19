@@ -42,7 +42,7 @@ def set_home_binary_profile_file():
 def set_home_binary():
     logger.info("************** SETUP HOME BINARY ******************")
     for cmd_key in ['set_home_binary_systemd_file', 'set_home_binary_profile_file'] :
-        cmd_value = CMD_MAP[cmd_key]
+        cmd_value = get_CMD_MAP[cmd_key]
         result = execute(cmd_value)
         if result != 0 :
             logger.info("************** SETUP FAILED! **********************")
@@ -50,13 +50,44 @@ def set_home_binary():
     logger.info("************** END SETUP **************************")
     
 
+def start_node():
+    cmd = "" 
+    if config.binary_node == 'oraid':
+        cmd = "cd {}; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'".format(config.workspace_new)
+    else:
+        cmd = "sudo systemctl start {}".format(config.binary_node)
+    return cmd 
+
+
+def stop_node():
+    cmd = "" 
+    if config.binary_node == 'oraid':
+        cmd = "docker stop orai_node ; sleep 2s"
+    else: 
+        cmd = "sudo systemctl stop {}; sleep 2s".format(config.binary_node)
+    return cmd 
+
+def remove_docker_container():
+    return "docker rm orai_node"
+
+
+def force_recreate_docker_container():
+    return "cd {} ; docker-compose up -d --force-recreate".format(config.workspace_new)
+    
+    
+def start_alert():
+    return "sudo systemctl start {}".format(config.py_alert)
+  
+def stop_alert():
+    return "sudo systemctl stop {}".format(config.py_alert)
+        
 def run_backup():
     logger.info("************** START BACKUP ***********************")
     for cmd_key in ['stop_node', 'backup_script'] :
         if cmd_key == 'backup_script':
             cmd_value = cmd_backup_script()
         else:
-            cmd_value = CMD_MAP[cmd_key]
+            cmd_value = get_CMD_MAP[cmd_key]
             
         result = execute(cmd_value)
         if result != 0 :
@@ -64,22 +95,29 @@ def run_backup():
             break 
     logger.info("************** END BACKUP ***********************")
 
+def get_CMD_MAP(): 
+    CMD_MAP = { 'start_node': start_node(),
+            'stop_node': stop_node(),
+            'start_alert': start_alert(),
+            'stop_alert': stop_alert(),
+            'backup_script': cmd_backup_script(),
+            'run_backup': 'stop_node; backup_script',
+            's3_download': s3_download("source_file?"),
+            'EXIT': "exit from the program",
+            'test1': 'pwd; ls',
+            'test2': 'lsmaldsa',
+            
+        }
+    
+    if config.binary_node == 'oraid':
+        CMD_MAP["remove_docker_container"] = remove_docker_container()
+        CMD_MAP["force_recreate_docker_container"] = force_recreate_docker_container()
+    else:
+        CMD_MAP['set_home_binary_systemd_file'] = set_home_binary_systemd_file()
+        CMD_MAP['set_home_binary_profile_file'] = set_home_binary_profile_file()
+        CMD_MAP['set_home_binary'] = 'set_home_binary_systemd_file; set_home_binary_profile_file'
 
-CMD_MAP = { 'start_node': "sudo systemctl start {}".format(config.binary_node),
-        'stop_node': "sudo systemctl stop {}; sleep 2s".format(config.binary_node),
-        'start_alert': "sudo systemctl start {}".format(config.py_alert),
-        'stop_alert': "sudo systemctl stop {}".format(config.py_alert),
-        'backup_script': cmd_backup_script(),
-        'run_backup': 'stop_node; backup_script',
-        's3_download': s3_download("source_file?"),
-        'set_home_binary_systemd_file': set_home_binary_systemd_file(),
-        'set_home_binary_profile_file': set_home_binary_profile_file(),
-        'set_home_binary': 'set_home_binary_systemd_file; set_home_binary_profile_file',
-        'EXIT': "exit from the program",
-        'test1': 'pwd; ls',
-        'test2': 'lsmaldsa',
-        
-    }
+    return CMD_MAP
 
 
 def execute(cmd):
@@ -101,7 +139,7 @@ def repl():
     while True:
         logger.info("\n********** START CMD: version={}***************\n".format(version.number))
         
-        print(json.dumps(CMD_MAP, sort_keys=False, indent=4))
+        print(json.dumps(get_CMD_MAP(), sort_keys=False, indent=4))
        
         print("\nENTER A CMD_KEY:")
          
@@ -119,7 +157,7 @@ def repl():
         elif cmd_key == 'set_home_binary':
             set_home_binary()
         else:
-            cmd_value = CMD_MAP.get(cmd_key, None)
+            cmd_value = get_CMD_MAP().get(cmd_key, None)
             if cmd_value is None:
                 logger.error('Invalid CMD_KEY={}! Try again.'.format(cmd_key))
         

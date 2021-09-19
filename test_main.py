@@ -5,6 +5,22 @@ import importlib
 
 class TestMainJuno(unittest.TestCase):
 
+    def test_start_node(self):
+        expected_cmd = 'sudo systemctl start junod'
+        self.assertEqual(main.start_node(), expected_cmd)
+    
+    def test_stop_node(self):
+        expected_cmd = 'sudo systemctl stop junod; sleep 2s'
+        self.assertEqual(main.stop_node(), expected_cmd)
+    
+    def test_start_alert(self):
+        expected_cmd = 'sudo systemctl start indep_node_alarm'
+        self.assertEqual(main.start_alert(), expected_cmd)
+    
+    def test_stop_alert(self):
+        expected_cmd = 'sudo systemctl stop indep_node_alarm'
+        self.assertEqual(main.stop_alert(), expected_cmd)
+    
     def test_cmd_backup_script(self):
         expected_cmd = 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/juno1_volume_fra1_01/workspace/.junod chandrodaya  /mnt/juno_1_volume_fra1_02/workspace/junod'
         self.assertEqual(main.cmd_backup_script(), expected_cmd)
@@ -38,8 +54,7 @@ class TestMainJuno(unittest.TestCase):
                             'test1': 'pwd; ls', 
                             'test2': 'lsmaldsa'}
         
-        actual_CMD_MAP = main.CMD_MAP
-        
+        actual_CMD_MAP = main.get_CMD_MAP()
         for key in actual_CMD_MAP.keys():
             self.assertEqual(actual_CMD_MAP[key], expected_CMD_MAP[key])
             
@@ -58,6 +73,30 @@ class TestMainOrai(unittest.TestCase):
         config.home_path =  "{}/.{}".format(config.workspace_new, config.binary_node)
 
         importlib.reload(main)
+    
+    def test_start_node(self):
+        expected_cmd = "cd /mnt/juno_1_volume_fra1_02/workspace; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'"
+        self.assertEqual(main.start_node(), expected_cmd)
+    
+    def test_stop_node(self):
+        expected_cmd = 'docker stop orai_node ; sleep 2s'
+        self.assertEqual(main.stop_node(), expected_cmd)
+        
+    def test_remove_docker_container(self):
+        expected_cmd = 'docker rm orai_node'
+        self.assertEqual(main.remove_docker_container(), expected_cmd)
+        
+    def test_force_recreate_docker_container(self):
+        expected_cmd = 'cd /mnt/juno_1_volume_fra1_02/workspace ; docker-compose up -d --force-recreate'
+        self.assertEqual(main.force_recreate_docker_container(), expected_cmd)
+        
+    def test_start_alert(self):
+        expected_cmd = 'sudo systemctl start indep_node_alarm'
+        self.assertEqual(main.start_alert(), expected_cmd)
+    
+    def test_stop_alert(self):
+        expected_cmd = 'sudo systemctl stop indep_node_alarm'
+        self.assertEqual(main.stop_alert(), expected_cmd)
 
     def test_cmd_backup_script(self):
         expected_cmd = 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/juno1_volume_fra1_01/workspace/.oraid chandrodaya  /mnt/juno_1_volume_fra1_02/workspace/oraid'
@@ -78,23 +117,20 @@ class TestMainOrai(unittest.TestCase):
         self.assertEqual(main.set_home_binary_profile_file(), expected_cmd)
         
     def test_CMD_MAP(self):
-        
-        expected_CMD_MAP = {'start_node': 'sudo systemctl start oraid', 
-                            'stop_node': 'sudo systemctl stop oraid; sleep 2s', 
+        expected_CMD_MAP = {'start_node': "cd /mnt/juno_1_volume_fra1_02/workspace; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'", 
+                            'stop_node': 'docker stop orai_node ; sleep 2s',
+                            'remove_docker_container': 'docker rm orai_node',
+                            'force_recreate_docker_container': 'cd /mnt/juno_1_volume_fra1_02/workspace ; docker-compose up -d --force-recreate',
                             'start_alert': 'sudo systemctl start indep_node_alarm', 
                             'stop_alert': 'sudo systemctl stop indep_node_alarm', 
                             'backup_script': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/juno1_volume_fra1_01/workspace/.oraid chandrodaya  /mnt/juno_1_volume_fra1_02/workspace/oraid', 
                             'run_backup': 'stop_node; backup_script', 
                             's3_download': 'cd /mnt/juno_1_volume_fra1_02/workspace; s3cmd get s3://chandrodaya/source_file? source_file? ; tar -xzvf source_file? ; rm source_file?', 
-                            'set_home_binary_systemd_file': 'sed -i "s/\\"HOME_ORAID=*.*/\\"HOME_ORAID=\\/mnt\\/juno_1_volume_fra1_02\\/workspace\\/.oraid\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload', 
-                            'set_home_binary_profile_file': 'sed -i "s/HOME_ORAID=*.*/HOME_ORAID=\\/mnt\\/juno_1_volume_fra1_02\\/workspace\\/.oraid/" ~/.profile ; . ~/.profile', 
-                            'set_home_binary': 'set_home_binary_systemd_file; set_home_binary_profile_file', 
-                            'EXIT': 'exit from the program', 
+                             'EXIT': 'exit from the program', 
                             'test1': 'pwd; ls', 
                             'test2': 'lsmaldsa'}
         
-        actual_CMD_MAP = main.CMD_MAP
-        
+        actual_CMD_MAP = main.get_CMD_MAP()
         for key in actual_CMD_MAP.keys():
             self.assertEqual(actual_CMD_MAP[key], expected_CMD_MAP[key])
         
