@@ -4,3 +4,7 @@ v1.0.0 (19.09.2021)
 	
 v1.0.1 (19.09.2021)
 	- Add set home methods
+	
+v1.0.2 (20.09.2021)
+	- Add oraid specific cmds
+	- Refactoring test cases
