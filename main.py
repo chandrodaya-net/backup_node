@@ -23,20 +23,20 @@ def escape_slash(name):
     return name.replace("/", "\/")
 
 def set_home_binary_systemd_file():
-    HOME_PATH = escape_slash(config.home_path) 
+    HOME_PATH_NEW = escape_slash(config.home_path_new) 
     HOME = 'HOME_' + config.binary_node.upper()
     #return """sed -i "s/\"{HOME}=*.*/\"{HOME}={HOME_PATH}\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload""".format(HOME=HOME,
-    return """sed -i "s/\\"{HOME}=*.*/\\"{HOME}={HOME_PATH}\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload""".format(HOME=HOME,
-                                                                                                                                        HOME_PATH=HOME_PATH)
+    return """sed -i "s/\\"{HOME}=*.*/\\"{HOME}={HOME_PATH_NEW}\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload""".format(HOME=HOME,
+                                                                                                                                        HOME_PATH_NEW=HOME_PATH_NEW)
 
 
 def set_home_binary_profile_file():
-    HOME_PATH = escape_slash(config.home_path) 
+    HOME_PATH_NEW = escape_slash(config.home_path_new) 
     HOME = 'HOME_' + config.binary_node.upper()
     # the cmd: "source . ~/.profile" does not work.
     # Therefore we have repalce with an equivalent one: ". ~/.profile"
-    return """sed -i "s/{HOME}=*.*/{HOME}={HOME_PATH}/" ~/.profile ; . ~/.profile""".format(HOME=HOME,
-                                                                             HOME_PATH=HOME_PATH)
+    return """sed -i "s/{HOME}=*.*/{HOME}={HOME_PATH_NEW}/" ~/.profile ; . ~/.profile""".format(HOME=HOME,
+                                                                             HOME_PATH_NEW=HOME_PATH_NEW)
 
 
 def set_home_binary():
@@ -67,6 +67,12 @@ def stop_node():
         cmd = "sudo systemctl stop {}; sleep 2s".format(config.binary_node)
     return cmd 
 
+def delete_priv_keys():
+    node_key_file = "{}/config/node_key.json".format(config.full_path_source_data)
+    priv_key_file = "{}/config/priv_validator_key.json".format(config.full_path_source_data)
+    priv_key_state_file = "{}/data/priv_validator_state.json".format(config.full_path_source_data)
+    return "rm {}; rm {}; rm {}".format(node_key_file, priv_key_file, priv_key_state_file)
+    
 def remove_docker_container():
     return "docker rm orai_node"
 
@@ -83,7 +89,7 @@ def stop_alert():
         
 def run_backup():
     logger.info("************** START BACKUP ***********************")
-    for cmd_key in ['stop_node', 'backup_script'] :
+    for cmd_key in ['stop_node', 'delete_priv_keys', 'backup_script'] :
         if cmd_key == 'backup_script':
             cmd_value = cmd_backup_script()
         else:
@@ -100,6 +106,7 @@ def get_CMD_MAP():
             'stop_node': stop_node(),
             'start_alert': start_alert(),
             'stop_alert': stop_alert(),
+            'delete_priv_keys': delete_priv_keys(),
             'backup_script': cmd_backup_script(),
             'run_backup': 'stop_node; backup_script',
             's3_download': s3_download("source_file?"),

@@ -1,16 +1,16 @@
 ##########################################################################################
 # BINARY NODE:
-binary_node = "junod"
+binary_node = "noded"
 
 ##########################################################################################
 # DYNAMIC CONFIG:
 
 # Directory where we currently store the blockchain data folder
-workspace_current = "/mnt/juno1_volume_fra1_01/workspace"
+workspace_current = "/mnt/volume_fra1_01/workspace"
 
 # Directory where we plan to store going forward the blockchain data folder. 
 # It is also used to zip the current data folder to the digitalocean space
-workspace_new = "/mnt/juno_1_volume_fra1_02/workspace"
+workspace_new = "/mnt/volume_fra1_02/workspace"
 
 ##########################################################################################
 # STATIC CONFIG:
@@ -25,7 +25,7 @@ full_path_source_data = "{}/.{}".format(workspace_current, binary_node)
 full_path_backup_name = "{}/{}".format(workspace_new, binary_node)
 
 # path to the blockchain datafolder
-home_path =  "{}/.{}".format(workspace_new, binary_node)
+home_path_new =  "{}/.{}".format(workspace_new, binary_node)
 
 log_file_path="/home/dau/workspace/python/github.com/dauTT/backup/logs/backup.log"
 log_level = "DEBUG" # DEBUG, INFO

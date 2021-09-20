@@ -25,7 +25,7 @@ full_path_source_data = "{}/.{}".format(workspace_current, binary_node[:-1])
 full_path_backup_name = "{}/{}".format(workspace_new, binary_node[:-1])
 
 # path to the blockchain datafolder
-home_path =  "{}/.{}".format(workspace_new, binary_node[:-1])
+home_path_new =  "{}/.{}".format(workspace_new, binary_node[:-1])
 
 log_file_path = "/root/py/backup/logs/backup.log"
 log_level = "DEBUG" # DEBUG, INFO

@@ -6,11 +6,11 @@ binary_node = "oraid"
 # DYNAMIC CONFIG:
 
 # Directory where we currently store the blockchain data folder
-workspace_current = "/mnt/......../workspace"
+workspace_current = "/mnt/volume_sfo3_02/orai"
 
 # Directory where we plan to store going forward the blockchain data folder. 
 # It is also used to zip the current data folder to the digitalocean space
-workspace_new = "/mnt/......../workspace"
+workspace_new = "/mnt/orai2_volume_sfo3_03/workspace"
 
 
 ##########################################################################################
