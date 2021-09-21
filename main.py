@@ -42,7 +42,7 @@ def set_home_binary_profile_file():
 def set_home_binary():
     logger.info("************** SETUP HOME BINARY ******************")
     for cmd_key in ['set_home_binary_systemd_file', 'set_home_binary_profile_file'] :
-        cmd_value = get_CMD_MAP[cmd_key]
+        cmd_value = get_CMD_MAP()[cmd_key]
         result = execute(cmd_value)
         if result != 0 :
             logger.info("************** SETUP FAILED! **********************")
@@ -67,18 +67,25 @@ def stop_node():
         cmd = "sudo systemctl stop {}; sleep 2s".format(config.binary_node)
     return cmd 
 
+def stop_remove_docker_container(): 
+    if config.binary_node == 'oraid':
+        raise Exception("This comd is only applicapble for orai network!")
+         
+    return "docker stop orai_node ; docker rm orai_node; sleep 2s" 
+
+
 def delete_priv_keys():
-    node_key_file = "{}/config/node_key.json".format(config.full_path_source_data)
-    priv_key_file = "{}/config/priv_validator_key.json".format(config.full_path_source_data)
-    priv_key_state_file = "{}/data/priv_validator_state.json".format(config.full_path_source_data)
-    return "rm {}; rm {}; rm {}".format(node_key_file, priv_key_file, priv_key_state_file)
+    node_key_file = "{}/config/node_key.json".format(config.home_path_current)
+    priv_key_file = "{}/config/priv_validator_key.json".format(config.home_path_current)
+    priv_key_state_file = "{}/data/priv_validator_state.json".format(config.home_path_current)
+    return "rm -f {}; rm -f {}; rm -f {}".format(node_key_file, priv_key_file, priv_key_state_file)
     
 def remove_docker_container():
     return "docker rm orai_node"
 
 
 def force_recreate_docker_container():
-    return "cd {} ; docker-compose up -d --force-recreate".format(config.workspace_new)
+    return "cd {} ; docker-compose pull && docker-compose up -d --force-recreate".format(config.workspace_new)
     
     
 def start_alert():
@@ -93,7 +100,7 @@ def run_backup():
         if cmd_key == 'backup_script':
             cmd_value = cmd_backup_script()
         else:
-            cmd_value = get_CMD_MAP[cmd_key]
+            cmd_value = get_CMD_MAP()[cmd_key]
             
         result = execute(cmd_value)
         if result != 0 :
@@ -108,7 +115,7 @@ def get_CMD_MAP():
             'stop_alert': stop_alert(),
             'delete_priv_keys': delete_priv_keys(),
             'backup_script': cmd_backup_script(),
-            'run_backup': 'stop_node; backup_script',
+            'run_backup': 'stop_node; delete_priv_keys; backup_script',
             's3_download': s3_download("source_file?"),
             'EXIT': "exit from the program",
             'test1': 'pwd; ls',

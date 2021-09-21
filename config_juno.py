@@ -5,12 +5,9 @@ binary_node = "junod"
 ##########################################################################################
 # DYNAMIC CONFIG:
 
-# Directory where we currently store the blockchain data folder
-workspace_current = "/mnt/juno1_volume_fra1_01/workspace"
-
-# Directory where we plan to store going forward the blockchain data folder. 
-# It is also used to zip the current data folder to the digitalocean space
-workspace_new = "/mnt/juno_1_volume_fra1_02/workspace"
+# DYNAMIC CONFIG:
+volume_current = '/mnt/volume_fra1_01'
+volume_new = '/mnt/volume_fra1_02'
 
 
 ##########################################################################################
@@ -19,11 +16,23 @@ workspace_new = "/mnt/juno_1_volume_fra1_02/workspace"
 py_alert = "indep_node_alarm"
 
 backup_script_path = "/root/py/backup/backup_script.sh"
-# space where we upload backup
-digital_ocean_space = "chandrodaya"
-full_path_source_data = "{}/.{}".format(workspace_current, binary_node[:-1])
-full_path_backup_name = "{}/{}".format(workspace_new, binary_node[:-1])
 
+# Directory where we currently store the blockchain data folder
+workspace_current = "{}/workspace".format(volume_current)
+
+# Directory where we plan to store going forward the blockchain data folder. 
+workspace_new = "{}/workspace".format(volume_new)
+
+# The following configurations are the arguments to pass the backup_script.sh
+# 1) the full path to the folder to backup
+full_path_source_data = workspace_current
+# 2) space
+digital_ocean_space = "chandrodaya"
+# 3) the full path of backup folder.The zip file create by the backup script will be stored temporarily in volumne_new
+full_path_backup_name = "{}/{}".format(volume_new, binary_node)
+
+# path to the current blockchain datafolder
+home_path_current =  "{}/.{}".format(workspace_current, binary_node[:-1])
 # path to the blockchain datafolder
 home_path_new =  "{}/.{}".format(workspace_new, binary_node[:-1])
 
