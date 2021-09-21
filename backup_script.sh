@@ -52,8 +52,11 @@ cleanUp(){
 
 if [ ! -z "$GIVENNAME" ]; then
     if tarandzip; then
-        movetoSpace
-	cleanUp
+        if movetoSpace; then
+	   cleanUp
+	else
+	   showhelp
+        fi
     else
         showhelp
     fi
