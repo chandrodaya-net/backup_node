@@ -14,7 +14,7 @@ def cmd_backup_script():
                                                            bkup=config.full_path_backup_name)
 
 def s3_download(source_file):
-    return "cd {wdir}; s3cmd get s3://{space}/{src} {src} ; tar -xzvf {src} ; rm {src}".format(wdir=config.workspace_new,
+    return "cd {volume_new}; s3cmd get s3://{space}/{src} {src} ; tar -xzvf {src} ; rm {src}".format(volume_new=config.volume_new,
                                                                                                     space=config.digital_ocean_space,
                                                                                                     src =source_file)
     
@@ -62,7 +62,7 @@ def start_node():
 def stop_node():
     cmd = "" 
     if config.binary_node == 'oraid':
-        cmd = "docker stop orai_node ; sleep 2s"
+        cmd = "docker stop orai_node ; sleep 1s; docker rm orai_node; sleep 1s"
     else: 
         cmd = "sudo systemctl stop {}; sleep 2s".format(config.binary_node)
     return cmd 

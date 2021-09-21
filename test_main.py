@@ -36,7 +36,7 @@ class TestMainJuno(unittest.TestCase):
         self.assertEqual(main.cmd_backup_script(), expected_cmd)
 
     def test_s3_download(self):
-        expected_cmd = 'cd /mnt/volume_fra1_02/workspace; s3cmd get s3://chandrodaya/file.tar.gz file.tar.gz ; tar -xzvf file.tar.gz ; rm file.tar.gz'
+        expected_cmd = 'cd /mnt/volume_fra1_02; s3cmd get s3://chandrodaya/file.tar.gz file.tar.gz ; tar -xzvf file.tar.gz ; rm file.tar.gz'
         self.assertEqual(main.s3_download("file.tar.gz"), expected_cmd)
         
     def test_set_home_binary_systemd_file(self):
@@ -57,7 +57,7 @@ class TestMainJuno(unittest.TestCase):
                             'delete_priv_keys': 'rm -f /mnt/volume_fra1_01/workspace/.juno/config/node_key.json; rm -f /mnt/volume_fra1_01/workspace/.juno/config/priv_validator_key.json; rm -f /mnt/volume_fra1_01/workspace/.juno/data/priv_validator_state.json' ,
                             'backup_script': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/junod', 
                             'run_backup': 'stop_node; delete_priv_keys; backup_script', 
-                            's3_download': 'cd /mnt/volume_fra1_02/workspace; s3cmd get s3://chandrodaya/source_file? source_file? ; tar -xzvf source_file? ; rm source_file?', 
+                            's3_download': 'cd /mnt/volume_fra1_02; s3cmd get s3://chandrodaya/source_file? source_file? ; tar -xzvf source_file? ; rm source_file?', 
                             'set_home_binary_systemd_file': 'sed -i "s/\\"HOME_JUNOD=*.*/\\"HOME_JUNOD=\\/mnt\\/volume_fra1_02\\/workspace\\/.juno\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload', 
                             'set_home_binary_profile_file': 'sed -i "s/HOME_JUNOD=*.*/HOME_JUNOD=\\/mnt\\/volume_fra1_02\\/workspace\\/.juno/" ~/.profile ; . ~/.profile', 
                             'set_home_binary': 'set_home_binary_systemd_file; set_home_binary_profile_file', 
@@ -85,7 +85,7 @@ class TestMainOrai(unittest.TestCase):
         self.assertEqual(main.start_node(), expected_cmd)
     
     def test_stop_node(self):
-        expected_cmd = 'docker stop orai_node ; sleep 2s'
+        expected_cmd = 'docker stop orai_node ; sleep 1s; docker rm orai_node; sleep 1s'
         self.assertEqual(main.stop_node(), expected_cmd)
         
     def test_delete_priv_keys(self):
@@ -113,7 +113,7 @@ class TestMainOrai(unittest.TestCase):
         self.assertEqual(main.cmd_backup_script(), expected_cmd)
 
     def test_s3_download(self):
-        expected_cmd = 'cd /mnt/volume_fra1_02/workspace; s3cmd get s3://chandrodaya/file.tar.gz file.tar.gz ; tar -xzvf file.tar.gz ; rm file.tar.gz'
+        expected_cmd = 'cd /mnt/volume_fra1_02; s3cmd get s3://chandrodaya/file.tar.gz file.tar.gz ; tar -xzvf file.tar.gz ; rm file.tar.gz'
         self.assertEqual(main.s3_download("file.tar.gz"), expected_cmd)
     
     # Following test are actually not needed  
@@ -128,7 +128,7 @@ class TestMainOrai(unittest.TestCase):
         
     def test_CMD_MAP(self):
         expected_CMD_MAP = {'start_node': "cd /mnt/volume_fra1_02/workspace; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'", 
-                            'stop_node': 'docker stop orai_node ; sleep 2s',
+                            'stop_node': 'docker stop orai_node ; sleep 1s; docker rm orai_node; sleep 1s',
                             'remove_docker_container': 'docker rm orai_node',
                             'force_recreate_docker_container': 'cd /mnt/volume_fra1_02/workspace ; docker-compose pull && docker-compose up -d --force-recreate',
                             'start_alert': 'sudo systemctl start indep_node_alarm', 
@@ -136,7 +136,7 @@ class TestMainOrai(unittest.TestCase):
                             'delete_priv_keys': 'rm -f /mnt/volume_fra1_01/workspace/.oraid/config/node_key.json; rm -f /mnt/volume_fra1_01/workspace/.oraid/config/priv_validator_key.json; rm -f /mnt/volume_fra1_01/workspace/.oraid/data/priv_validator_state.json' ,
                             'backup_script': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/oraid', 
                             'run_backup': 'stop_node; delete_priv_keys; backup_script', 
-                            's3_download': 'cd /mnt/volume_fra1_02/workspace; s3cmd get s3://chandrodaya/source_file? source_file? ; tar -xzvf source_file? ; rm source_file?', 
+                            's3_download': 'cd /mnt/volume_fra1_02; s3cmd get s3://chandrodaya/source_file? source_file? ; tar -xzvf source_file? ; rm source_file?', 
                              'EXIT': 'exit from the program', 
                             'test1': 'pwd; ls', 
                             'test2': 'lsmaldsa'}

@@ -30,8 +30,11 @@ digital_ocean_space = "chandrodaya"
 # the full path of backup folder.The zip file create by the backup script will be stored temporarily in volumne_new
 full_path_backup_name = "{}/{}".format(volume_new, binary_node)
 
-# path to the blockchain datafolder
-home_path =  "{}/.{}".format(workspace_new, binary_node)
+# path to the current blockchain datafolder
+home_path_current =  "{}/.{}".format(workspace_current, binary_node)
+
+# path to the new blockchain datafolder
+home_path_new =  "{}/.{}".format(workspace_new, binary_node)
 
 log_file_path = "/root/py/backup/logs/backup.log"
 log_level = "DEBUG" # DEBUG, INFO
