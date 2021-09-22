@@ -75,14 +75,8 @@ def set_home_binary_profile_file():
 
 
 def set_home_binary():
-    logger.info("************** SETUP HOME BINARY ******************")
-    for cmd_key in ['set_home_binary_systemd_file', 'set_home_binary_profile_file'] :
-        cmd_value = get_CMD_MAP()[cmd_key]
-        result = execute(cmd_value)
-        if result != 0 :
-            logger.info("************** SETUP FAILED! **********************")
-            break 
-    logger.info("************** END SETUP **************************")
+    cmd_keys = ['set_home_binary_systemd_file', 'set_home_binary_profile_file']
+    execute_cmds(cmd_keys, 'SET HOME BINARY')
     
 
 def start_node():
@@ -126,50 +120,55 @@ def force_recreate_docker_container():
     
 
 def start_alert():
-    return "sudo systemctl start {}".format(config.py_alert)
+    return "sudo systemctl start indep_node_alarm"
 
   
 def stop_alert():
-    return "sudo systemctl stop {}".format(config.py_alert)
+    return "sudo systemctl stop indep_node_alarm"
 
-        
+
+def start_signctrl():
+    return "sudo systemctl start signctrl"
+
+  
+def stop_signctrl():
+    return "sudo systemctl stop signctrl"
+
+    
 def run_backup():
-    logger.info("************** START BACKUP ***********************")
-    for cmd_key in ['stop_node', 'delete_priv_keys', 'backup_script'] :
-        if cmd_key == 'backup_script':
-            cmd_value = cmd_backup_script()
-        else:
-            cmd_value = get_CMD_MAP()[cmd_key]
-            
-        result = execute(cmd_value)
-        if result != 0 :
-            logger.info("************** BACKUP FAILED! ***********************")
-            break 
-    logger.info("************** END BACKUP ***********************")
-
+    cmd_keys = ['stop_node', 'stop_signctrl', 'delete_priv_keys', 'backup_script']
+    execute_cmds(cmd_keys, 'BACKUP')
+   
+def restart_new_node():
+    cmd_keys = ['start_signctrl']
+    if config.binary_node == 'oraid':
+        cmd_keys.append('force_recreate_docker_container')
+    cmd_keys.append('start_node')
+    execute_cmds(cmd_keys, 'RESTART NEW NODE') 
 
 def get_CMD_MAP(): 
     CMD_MAP = { 'start_node': start_node(),
             'stop_node': stop_node(),
+            'start_signctrl': start_signctrl(),
+            'stop_signctrl': stop_signctrl(),
             'start_alert': start_alert(),
             'stop_alert': stop_alert(),
             'delete_priv_keys': delete_priv_keys(),
             'backup_script': cmd_backup_script(),
             'run_backup': 'stop_node; delete_priv_keys; backup_script',
             's3_download': s3_download("source_file?"),
-            'EXIT': "exit from the program",
-            'test1': 'pwd; ls',
-            'test2': 'lsmaldsa',
-            
+            'EXIT': "exit from the program"
         }
     
     if config.binary_node == 'oraid':
         CMD_MAP["remove_docker_container"] = remove_docker_container()
         CMD_MAP["force_recreate_docker_container"] = force_recreate_docker_container()
+        CMD_MAP["restart_new_node"] = 'start_signctrl; force_recreate_docker_container; start_node' 
     else:
         CMD_MAP['set_home_binary_systemd_file'] = set_home_binary_systemd_file()
         CMD_MAP['set_home_binary_profile_file'] = set_home_binary_profile_file()
         CMD_MAP['set_home_binary'] = 'set_home_binary_systemd_file; set_home_binary_profile_file'
+        CMD_MAP["restart_new_node"] = 'start_signctrl; start_node'
 
     return CMD_MAP
 
@@ -188,6 +187,19 @@ def execute(cmd):
         logger.error("\n\n********** EXECUTION FAIL! *********")
         return (exc.returncode) 
 
+def execute_cmds(cmd_keys, task_name):
+    logger.info("************** START {} ***********************".format(task_name))
+    for k in cmd_keys :
+        if k == 'backup_script':
+            cmd_value = cmd_backup_script()
+        else:
+            cmd_value = get_CMD_MAP()[k]
+            
+        result = execute(cmd_value)
+        if result != 0 :
+            logger.info("************** {} FAILED! ***********************".format(task_name))
+            break 
+    logger.info("************** END {} ***********************".format(task_name))
 
 def repl():
     while True:
@@ -210,6 +222,8 @@ def repl():
             run_backup()
         elif cmd_key == 'set_home_binary':
             set_home_binary()
+        elif cmd_key == 'restart_new_node':
+            restart_new_node()
         else:
             cmd_value = get_CMD_MAP().get(cmd_key, None)
             if cmd_value is None:

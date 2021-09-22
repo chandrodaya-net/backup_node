@@ -2,7 +2,7 @@ import unittest
 import config 
 import main
 
-class TestPah(unittest.TestCase):
+class TestCommon(unittest.TestCase):
     def test_workspace_current(self):
         expected_cmd = '/mnt/volume_fra1_01/workspace'
         self.assertEqual(main.workspace_current(), expected_cmd)
@@ -14,6 +14,22 @@ class TestPah(unittest.TestCase):
     def test_full_path_source_data(self):
         expected_cmd = '/mnt/volume_fra1_01/workspace'
         self.assertEqual(main.full_path_source_data(), expected_cmd)
+        
+    def test_start_signctrl(self):
+        expected_cmd = 'sudo systemctl start signctrl'
+        self.assertEqual(main.start_signctrl(), expected_cmd)
+    
+    def test_stop_signctrl(self):
+        expected_cmd = 'sudo systemctl stop signctrl'
+        self.assertEqual(main.stop_signctrl(), expected_cmd)
+        
+    def test_start_alert(self):
+        expected_cmd = 'sudo systemctl start indep_node_alarm'
+        self.assertEqual(main.start_alert(), expected_cmd)
+    
+    def test_stop_alert(self):
+        expected_cmd = 'sudo systemctl stop indep_node_alarm'
+        self.assertEqual(main.stop_alert(), expected_cmd)
     
     
 class TestMainJuno(unittest.TestCase):
@@ -36,7 +52,7 @@ class TestMainJuno(unittest.TestCase):
     def test_home_path_new(self):
         expected_cmd = '/mnt/volume_fra1_02/workspace/.juno'
         self.assertEqual(main.home_path_new(), expected_cmd)
-
+        
     def test_start_node(self):
         expected_cmd = 'sudo systemctl start junod'
         self.assertEqual(main.start_node(), expected_cmd)
@@ -44,15 +60,7 @@ class TestMainJuno(unittest.TestCase):
     def test_stop_node(self):
         expected_cmd = 'sudo systemctl stop junod; sleep 2s'
         self.assertEqual(main.stop_node(), expected_cmd)
-    
-    def test_start_alert(self):
-        expected_cmd = 'sudo systemctl start indep_node_alarm'
-        self.assertEqual(main.start_alert(), expected_cmd)
-    
-    def test_stop_alert(self):
-        expected_cmd = 'sudo systemctl stop indep_node_alarm'
-        self.assertEqual(main.stop_alert(), expected_cmd)
-    
+
     def test_delete_priv_keys(self):
         expected_cmd = 'rm -f /mnt/volume_fra1_01/workspace/.juno/config/node_key.json; rm -f /mnt/volume_fra1_01/workspace/.juno/config/priv_validator_key.json; rm -f /mnt/volume_fra1_01/workspace/.juno/data/priv_validator_state.json'
         self.assertEqual(main.delete_priv_keys(), expected_cmd)
@@ -78,8 +86,11 @@ class TestMainJuno(unittest.TestCase):
     def test_CMD_MAP(self):
         expected_CMD_MAP = {'start_node': 'sudo systemctl start junod', 
                             'stop_node': 'sudo systemctl stop junod; sleep 2s', 
+                            'restart_new_node': 'start_signctrl; start_node',
                             'start_alert': 'sudo systemctl start indep_node_alarm', 
                             'stop_alert': 'sudo systemctl stop indep_node_alarm', 
+                            'start_signctrl': 'sudo systemctl start signctrl', 
+                            'stop_signctrl': 'sudo systemctl stop signctrl', 
                             'delete_priv_keys': 'rm -f /mnt/volume_fra1_01/workspace/.juno/config/node_key.json; rm -f /mnt/volume_fra1_01/workspace/.juno/config/priv_validator_key.json; rm -f /mnt/volume_fra1_01/workspace/.juno/data/priv_validator_state.json' ,
                             'backup_script': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/junod', 
                             'run_backup': 'stop_node; delete_priv_keys; backup_script', 
@@ -140,14 +151,6 @@ class TestMainOrai(unittest.TestCase):
         expected_cmd = 'cd /mnt/volume_fra1_02/workspace ; docker-compose pull && docker-compose up -d --force-recreate' 
         self.assertEqual(main.force_recreate_docker_container(), expected_cmd)
         
-    def test_start_alert(self):
-        expected_cmd = 'sudo systemctl start indep_node_alarm'
-        self.assertEqual(main.start_alert(), expected_cmd)
-    
-    def test_stop_alert(self):
-        expected_cmd = 'sudo systemctl stop indep_node_alarm'
-        self.assertEqual(main.stop_alert(), expected_cmd)
-
     def test_cmd_backup_script(self):
         expected_cmd = 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/oraid'
         self.assertEqual(main.cmd_backup_script(), expected_cmd)
@@ -173,6 +176,9 @@ class TestMainOrai(unittest.TestCase):
                             'force_recreate_docker_container': 'cd /mnt/volume_fra1_02/workspace ; docker-compose pull && docker-compose up -d --force-recreate',
                             'start_alert': 'sudo systemctl start indep_node_alarm', 
                             'stop_alert': 'sudo systemctl stop indep_node_alarm', 
+                            'start_signctrl': 'sudo systemctl start signctrl', 
+                            'stop_signctrl': 'sudo systemctl stop signctrl', 
+                            'restart_new_node': 'start_signctrl; force_recreate_docker_container; start_node',
                             'delete_priv_keys': 'rm -f /mnt/volume_fra1_01/workspace/.oraid/config/node_key.json; rm -f /mnt/volume_fra1_01/workspace/.oraid/config/priv_validator_key.json; rm -f /mnt/volume_fra1_01/workspace/.oraid/data/priv_validator_state.json' ,
                             'backup_script': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/oraid', 
                             'run_backup': 'stop_node; delete_priv_keys; backup_script', 
