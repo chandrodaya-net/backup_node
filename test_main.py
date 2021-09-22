@@ -2,14 +2,40 @@ import unittest
 import config 
 import main
 
+class TestPah(unittest.TestCase):
+    def test_workspace_current(self):
+        expected_cmd = '/mnt/volume_fra1_01/workspace'
+        self.assertEqual(main.workspace_current(), expected_cmd)
+
+    def test_workspace_new(self):
+        expected_cmd = '/mnt/volume_fra1_02/workspace'
+        self.assertEqual(main.workspace_new(), expected_cmd)
+    
+    def test_full_path_source_data(self):
+        expected_cmd = '/mnt/volume_fra1_01/workspace'
+        self.assertEqual(main.full_path_source_data(), expected_cmd)
+    
+    
 class TestMainJuno(unittest.TestCase):
     
     def setUp(self):
         config.binary_node = "junod"
-        config.full_path_backup_name = "{}/{}".format(config.volume_new, config.binary_node)
-        config.home_path_current =  "{}/.{}".format(config.workspace_current, config.binary_node[:-1])
-        # new path to the blockchain datafolder
-        config.home_path_new =  "{}/.{}".format(config.workspace_new, config.binary_node[:-1])
+    
+    def test_modifier_binary_name(self):
+        expected_cmd = 'juno'
+        self.assertEqual(main.modifier_binary_name(), expected_cmd)
+        
+    def test_full_path_backup_name(self):
+        expected_cmd = '/mnt/volume_fra1_02/junod'
+        self.assertEqual(main.full_path_backup_name(), expected_cmd)
+    
+    def test_home_path_current(self):
+        expected_cmd = '/mnt/volume_fra1_01/workspace/.juno'
+        self.assertEqual(main.home_path_current(), expected_cmd)
+    
+    def test_home_path_new(self):
+        expected_cmd = '/mnt/volume_fra1_02/workspace/.juno'
+        self.assertEqual(main.home_path_new(), expected_cmd)
 
     def test_start_node(self):
         expected_cmd = 'sudo systemctl start junod'
@@ -75,11 +101,25 @@ class TestMainOrai(unittest.TestCase):
     
     def setUp(self):
         config.binary_node='oraid'
-        config.full_path_backup_name = "{}/{}".format(config.volume_new, config.binary_node)
-        config.home_path_current =  "{}/.{}".format(config.workspace_current, config.binary_node)
-        # new path to the blockchain datafolder
-        config.home_path_new =  "{}/.{}".format(config.workspace_new, config.binary_node)
+        
+    def test_modifier_binary_name(self):
+        expected_cmd = 'oraid'
+        self.assertEqual(main.modifier_binary_name(), expected_cmd)
+        
+    def test_full_path_backup_name(self):
+        expected_cmd = '/mnt/volume_fra1_02/oraid'
+        self.assertEqual(main.full_path_backup_name(), expected_cmd)
     
+    # Following test are actually not needed
+    # def test_home_path_current(self):
+    #    expected_cmd = '/mnt/volume_fra1_01/workspace/.oraid'
+    #    self.assertEqual(main.home_path_current(), expected_cmd)
+        
+    # Following test are actually not needed
+    # def test_home_path_new(self):
+    #    expected_cmd = '/mnt/volume_fra1_02/workspace/.oraid'
+    #    self.assertEqual(main.home_path_new(), expected_cmd)
+       
     def test_start_node(self):
         expected_cmd = "cd /mnt/volume_fra1_02/workspace; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'"
         self.assertEqual(main.start_node(), expected_cmd)

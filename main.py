@@ -7,11 +7,45 @@ from setuptools.sandbox import _execfile
  
 logger = create_logger(config.log_file_path, __name__ , config.log_level, True)
 
+
+# Directory where we currently store the blockchain data folder
+def workspace_current():
+    return  "{}/workspace".format(config.volume_current)
+
+
+# Directory where we plan to store going forward the blockchain data folder. 
+def workspace_new():
+    return  "{}/workspace".format(config.volume_new)
+
+
+# the full path to the folder to backup. Argument for the backup_script.sh
+def full_path_source_data():
+    return workspace_current()
+
+
+def modifier_binary_name():
+    return config.binary_node[:-1] if config.binary_node == 'junod' else config.binary_node
+    
+# the full path of the backup folder. Argument for the backup_script.sh
+# The zip file create by the backup script will be stored temporarily in volumne_new
+def full_path_backup_name():
+    return  "{}/{}".format(config.volume_new, config.binary_node)
+
+# path to the blockchain datafolder
+def home_path_current():
+    return "{}/.{}".format(workspace_current(), modifier_binary_name())
+
+# path to the blockchain datafolder
+def home_path_new():
+    return "{}/.{}".format(workspace_new(), modifier_binary_name())
+
+
 def cmd_backup_script():
     return "sh {script_path} {src} {space}  {bkup}".format(script_path=config.backup_script_path,
                                                            space=config.digital_ocean_space,
-                                                           src =config.full_path_source_data,
-                                                           bkup=config.full_path_backup_name)
+                                                           src =full_path_source_data(),
+                                                           bkup=full_path_backup_name())
+
 
 def s3_download(source_file):
     return "cd {volume_new}; s3cmd get s3://{space}/{src} {src} ; tar -xzvf {src} ; rm {src}".format(volume_new=config.volume_new,
@@ -22,8 +56,9 @@ def s3_download(source_file):
 def escape_slash(name):
     return name.replace("/", "\/")
 
+
 def set_home_binary_systemd_file():
-    HOME_PATH_NEW = escape_slash(config.home_path_new) 
+    HOME_PATH_NEW = escape_slash(home_path_new()) 
     HOME = 'HOME_' + config.binary_node.upper()
     #return """sed -i "s/\"{HOME}=*.*/\"{HOME}={HOME_PATH}\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload""".format(HOME=HOME,
     return """sed -i "s/\\"{HOME}=*.*/\\"{HOME}={HOME_PATH_NEW}\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload""".format(HOME=HOME,
@@ -31,7 +66,7 @@ def set_home_binary_systemd_file():
 
 
 def set_home_binary_profile_file():
-    HOME_PATH_NEW = escape_slash(config.home_path_new) 
+    HOME_PATH_NEW = escape_slash(home_path_new()) 
     HOME = 'HOME_' + config.binary_node.upper()
     # the cmd: "source . ~/.profile" does not work.
     # Therefore we have repalce with an equivalent one: ". ~/.profile"
@@ -53,7 +88,7 @@ def set_home_binary():
 def start_node():
     cmd = "" 
     if config.binary_node == 'oraid':
-        cmd = "cd {}; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'".format(config.workspace_new)
+        cmd = "cd {}; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'".format(workspace_new())
     else:
         cmd = "sudo systemctl start {}".format(config.binary_node)
     return cmd 
@@ -67,6 +102,7 @@ def stop_node():
         cmd = "sudo systemctl stop {}; sleep 2s".format(config.binary_node)
     return cmd 
 
+
 def stop_remove_docker_container(): 
     if config.binary_node == 'oraid':
         raise Exception("This comd is only applicapble for orai network!")
@@ -75,24 +111,27 @@ def stop_remove_docker_container():
 
 
 def delete_priv_keys():
-    node_key_file = "{}/config/node_key.json".format(config.home_path_current)
-    priv_key_file = "{}/config/priv_validator_key.json".format(config.home_path_current)
-    priv_key_state_file = "{}/data/priv_validator_state.json".format(config.home_path_current)
+    node_key_file = "{}/config/node_key.json".format(home_path_current())
+    priv_key_file = "{}/config/priv_validator_key.json".format(home_path_current())
+    priv_key_state_file = "{}/data/priv_validator_state.json".format(home_path_current())
     return "rm -f {}; rm -f {}; rm -f {}".format(node_key_file, priv_key_file, priv_key_state_file)
-    
+
+ 
 def remove_docker_container():
     return "docker rm orai_node"
 
 
 def force_recreate_docker_container():
-    return "cd {} ; docker-compose pull && docker-compose up -d --force-recreate".format(config.workspace_new)
+    return "cd {} ; docker-compose pull && docker-compose up -d --force-recreate".format(workspace_new())
     
-    
+
 def start_alert():
     return "sudo systemctl start {}".format(config.py_alert)
+
   
 def stop_alert():
     return "sudo systemctl stop {}".format(config.py_alert)
+
         
 def run_backup():
     logger.info("************** START BACKUP ***********************")
@@ -107,6 +146,7 @@ def run_backup():
             logger.info("************** BACKUP FAILED! ***********************")
             break 
     logger.info("************** END BACKUP ***********************")
+
 
 def get_CMD_MAP(): 
     CMD_MAP = { 'start_node': start_node(),
