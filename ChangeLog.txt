@@ -12,3 +12,6 @@ v1.0.3 (21.09.2021)
 	- Refactoring config
 	- The folder to backup will be: /mnt/volume_current/workspace
 	- The backup name folder will be: /mnt/volume_new/binary_name 
+
+v1.0.4 (22.09.2021)
+	- Configuration refactoring
