@@ -1,1 +1,1 @@
-number = "v1.0.5"
+number = "v1.1.0"
