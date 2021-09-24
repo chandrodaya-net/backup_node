@@ -83,17 +83,17 @@ def escape_slash(name):
     return name.replace("/", "\/")
 
 
-def cmd_format(cmd_value, cmd_name, cmd_group):
-    return {'cmd_keys': cmd_value, 'cmd_name': cmd_name.upper(), 'cmd_group': cmd_group}
+def cmd_format(cmd_value, cmd_name):
+    return {'key': cmd_value, 'name': cmd_name.upper()}
 
 def set_new_home_binary_systemd_file():
     "this cmd is applicable only for juno"
 
     HOME_PATH_NEW = escape_slash(home_path_new()) 
     HOME = 'HOME_' + config.binary_node.upper()
-    cmd_value = """sed -i "s/\\"{HOME}=*.*/\\"{HOME}={HOME_PATH_NEW}\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload""".format(HOME=HOME,
-                                                                                                                                        HOME_PATH_NEW=HOME_PATH_NEW)
-    return cmd_format(cmd_value, 'start_cur_node', 0)
+    cmd_value = ["""sed -i "s/\\"{HOME}=*.*/\\"{HOME}={HOME_PATH_NEW}\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload""".format(HOME=HOME,
+                                                                                                                                        HOME_PATH_NEW=HOME_PATH_NEW)]
+    return cmd_format(cmd_value, 'start_cur_node')
 
 
 def set_new_home_binary_profile_file():
@@ -103,16 +103,16 @@ def set_new_home_binary_profile_file():
     HOME = 'HOME_' + config.binary_node.upper()
     # the cmd: "source . ~/.profile" does not work.
     # Therefore we have replaced it with an equivalent one: ". ~/.profile"
-    cmd_value = """sed -i "s/{HOME}=*.*/{HOME}={HOME_PATH_NEW}/" ~/.profile ; . ~/.profile""".format(HOME=HOME,
-                                                                             HOME_PATH_NEW=HOME_PATH_NEW)
-    return cmd_format(cmd_value, 'set_new_home_binary_profile_file', 0) 
+    cmd_value = ["""sed -i "s/{HOME}=*.*/{HOME}={HOME_PATH_NEW}/" ~/.profile ; . ~/.profile""".format(HOME=HOME,
+                                                                             HOME_PATH_NEW=HOME_PATH_NEW)]
+    return cmd_format(cmd_value, 'set_new_home_binary_profile_file') 
 
 
 def start_node():
     "this cmd is applicable only for juno"
     
-    cmd_value = "sudo systemctl start {}".format(config.binary_node)
-    return cmd_format(cmd_value, 'start_cur_node', 0)
+    cmd_value = ["sudo systemctl start {}".format(config.binary_node)]
+    return cmd_format(cmd_value, 'start_cur_node')
 
 
 def _start_node(workspace):
@@ -125,16 +125,16 @@ def _start_node(workspace):
 def start_cur_node():
     "this cmd is applicable only for orai"
     
-    cmd_value = _start_node(workspace_current())
-    return cmd_format(cmd_value, 'start_cur_node', 0)
+    cmd_value = [_start_node(workspace_current())]
+    return cmd_format(cmd_value, 'start_cur_node')
 
     
     
 def start_new_node():
     "this cmd is applicable only for orai"
 
-    cmd_value = _start_node(workspace_new())
-    return cmd_format(cmd_value, 'start_new_node', 0)
+    cmd_value = [_start_node(workspace_new())]
+    return cmd_format(cmd_value, 'start_new_node')
 
 
 def stop_node():
@@ -142,18 +142,18 @@ def stop_node():
 
     cmd_value = "" 
     if config.binary_node == 'oraid':
-        cmd_value = "docker stop orai_node ; sleep 1s; docker rm orai_node; sleep 1s"
+        cmd_value = ["docker stop orai_node ; sleep 1s; docker rm orai_node; sleep 1s"]
     else: 
-        cmd_value = "sudo systemctl stop {}; sleep 2s".format(config.binary_node)
-    return cmd_format(cmd_value, 'stop_node', 0)
+        cmd_value = ["sudo systemctl stop {}; sleep 2s".format(config.binary_node)]
+    return cmd_format(cmd_value, 'stop_node')
 
 
 def stop_remove_docker_container():
     "This cmd is applicable only for orai"
 
     check()
-    cmd_value = "docker stop orai_node ; docker rm orai_node; sleep 2s" 
-    return cmd_format(cmd_value, 'stop_remove_docker_container', 0)
+    cmd_value = ["docker stop orai_node ; docker rm orai_node; sleep 2s"]
+    return cmd_format(cmd_value, 'stop_remove_docker_container')
 
 def delete_priv_keys():
     "This cmd is applicable for all networks"
@@ -161,14 +161,14 @@ def delete_priv_keys():
     node_key_file = "{}/config/node_key.json".format(home_path_current())
     priv_key_file = "{}/config/priv_validator_key.json".format(home_path_current())
     priv_key_state_file = "{}/data/priv_validator_state.json".format(home_path_current())
-    cmd_value = "rm -f {}; rm -f {}; rm -f {}".format(node_key_file, priv_key_file, priv_key_state_file)
-    return cmd_format(cmd_value, 'delete_priv_keys', 0)
+    cmd_value = ["rm -f {}; rm -f {}; rm -f {}".format(node_key_file, priv_key_file, priv_key_state_file)]
+    return cmd_format(cmd_value, 'delete_priv_keys')
  
 def remove_docker_container():
     "This cmd is applicable only for orai"
     
-    cmd_value = "docker rm orai_node"
-    return cmd_format(cmd_value, 'remove_docker_container', 0)
+    cmd_value = ["docker rm orai_node"]
+    return cmd_format(cmd_value, 'remove_docker_container')
 
 
 def force_recreate_docker_container(workspace):
@@ -179,78 +179,86 @@ def force_recreate_docker_container(workspace):
 def force_recreate_cur_docker_container():
     "This cmd is applicable only for orai"
     
-    cmd_value = force_recreate_docker_container(workspace_current())
-    return cmd_format(cmd_value, 'force_recreate_cur_docker_container', 0)
+    cmd_value = [force_recreate_docker_container(workspace_current())]
+    return cmd_format(cmd_value, 'force_recreate_cur_docker_container')
 
 
 def force_recreate_new_docker_container():
     "This cmd is applicable only for orai"
     
-    cmd_value = force_recreate_docker_container(workspace_new())
-    return cmd_format(cmd_value, 'force_recreate_new_docker_container', 0)
+    cmd_value = [force_recreate_docker_container(workspace_new())]
+    return cmd_format(cmd_value, 'force_recreate_new_docker_container')
 
 
 def start_alert():
     "This cmd is applicable for all networks"
 
-    cmd_value = "sudo systemctl start indep_node_alarm"
-    return cmd_format(cmd_value, 'start_alert', 0)
+    cmd_value = ["sudo systemctl start indep_node_alarm"]
+    return cmd_format(cmd_value, 'start_alert')
 
 
 def stop_alert():
     "This cmd is applicable for all networks"
 
-    return {'cmd_keys': "sudo systemctl stop indep_node_alarm", 
-            'cmd_name': 'stop_alert'.upper(), 'cmd_group':0}
+    cmd_value = ["sudo systemctl stop indep_node_alarm"]
+    return cmd_format(cmd_value, 'stop_alert')
+
 
 def start_signctrl():
     "This cmd is applicable only for all networks"
 
-    cmd_value = "sudo systemctl start signctrl"
-    return cmd_format(cmd_value, 'start_signctrl', 0)
+    cmd_value = ["sudo systemctl start signctrl"]
+    return cmd_format(cmd_value, 'start_signctrl')
 
 
 def stop_signctrl():
     "This cmd is applicable only for all networks"
     
-    cmd_value = "sudo systemctl stop signctrl"
-    return cmd_format(cmd_value, 'stop_signctrl', 0)
+    cmd_value = ["sudo systemctl stop signctrl"]
+    return cmd_format(cmd_value, 'stop_signctrl')
 
 
 def delete_signctrl_state():
     "This cmd is applicable only for all networks"
 
-    cmd_value = "rm -f /home/signer/.signctrl/signctrl_state.json"
-    return cmd_format(cmd_value, 'delete_signctrl_state', 0)
+    cmd_value = ["rm -f /home/signer/.signctrl/signctrl_state.json"]
+    return cmd_format(cmd_value, 'delete_signctrl_state')
 
  
 def set_new_home_binary():
     "this cmd is applicable only for juno"
     
     cmd_value = ['set_new_home_binary_systemd_file', 'set_new_home_binary_profile_file']
-    return cmd_format(cmd_value, 'set_new_home_binary', 1)
+    return cmd_format(cmd_value, 'set_new_home_binary')
     
     
 def run_backup():
     "This cmd is applicable only for all networks"
 
     cmd_value = ['stop_node', 'stop_signctrl', 'delete_priv_keys', 'backup_script']
-    return cmd_format(cmd_value, 'run_backup', 1)
+    return cmd_format(cmd_value, 'run_backup')
     
 
 def restart_node():
     "This cmd is applicable only for juno"
 
     cmd_value = ['delete_signctrl_state', 'start_signctrl', 'start_node']
-    return cmd_format(cmd_value, 'restart_node', 1)
+    return cmd_format(cmd_value, 'restart_node')
 
     
 def restart_new_node():
     "This cmd is applicable only for orai"
     
     check()
+#     cmd_value = "" 
+#     if config.binary_node == 'oraid':
+#         cmd_value = "docker stop orai_node ; sleep 1s; docker rm orai_node; sleep 1s"
+#     else: 
+#         cmd_value = "sudo systemctl stop {}; sleep 2s".format(config.binary_node)
+#     return cmd_format(cmd_value, 'stop_node', 0)
+
     cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_new_docker_container', 'start_new_node']
-    return cmd_format(cmd_value, 'restart_new_node', 1)
+    return cmd_format(cmd_value, 'restart_new_node')
 
 
 def restart_cur_node():
@@ -258,21 +266,21 @@ def restart_cur_node():
     
     check()
     cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_cur_docker_container', 'start_cur_node']
-    return cmd_format(cmd_value, 'restart_cur_node', 1)
+    return cmd_format(cmd_value, 'restart_cur_node')
    
 
 def run_backup_and_restart_node():
     "This cmd is applicable only for juno"
     
     cmd_value = ['run_backup', 'restart_node']
-    return cmd_format(cmd_value, 'run_backup_and_restart_node', 2)
+    return cmd_format(cmd_value, 'run_backup_and_restart_node')
      
 
 def run_backup_and_set_new_home_and_start_node():
     "This cmd is applicable only for juno"
     
     cmd_value = ['run_backup', 'set_new_home_binary', 'restart_node']
-    return cmd_format(cmd_value, 'run_backup_and_set_new_home_and_start_node', 2)
+    return cmd_format(cmd_value, 'run_backup_and_set_new_home_and_start_node')
    
 
 def run_backup_and_restart_cur_node():
@@ -280,7 +288,7 @@ def run_backup_and_restart_cur_node():
 
     check()
     cmd_value = ['run_backup', 'restart_cur_node']
-    return cmd_format(cmd_value, 'run_backup_and_restart_cur_node', 2)
+    return cmd_format(cmd_value, 'run_backup_and_restart_cur_node')
 
 
 def run_backup_and_restart_new_node():
@@ -288,24 +296,18 @@ def run_backup_and_restart_new_node():
 
     check()
     cmd_value = ['run_backup', 'restart_new_node']
-    return cmd_format(cmd_value, 'run_backup_and_restart_new_node', 2)
+    return cmd_format(cmd_value, 'run_backup_and_restart_new_node')
 
 def display_cmd_value(cmd):
     """cmd: one of the cmd function. The output of such function is in this form:
-        {cmd_keys: ...., cmd_name: ...., cmd_group:}
+        {cmd_keys: ...., cmd_name: ...., cmd_level:}
         
         See cmd_format fucntion.
     """
-    
-    if cmd == 'set_new_home_binary':
-        print('stop')
-        
+     
     cmd_func = globals()[cmd]
-    cmd_group = cmd_func()['cmd_group']
-    
-    output = ""
-    cmd_value = cmd_func()['cmd_keys']
-    return cmd_value if cmd_group == 0 else '; '.join(cmd_value)
+    cmd_value = cmd_func()['key']
+    return '; '.join(cmd_value)
 
     
 def get_CMD_MAP(): 
@@ -340,25 +342,20 @@ def get_CMD_MAP():
     return CMD_MAP
 
 
-def exec_shell_group2_cmd(cmd_keys, cmd_name):
-    return _exec_shell_group_cmd(exec_shell_group1_cmd, cmd_keys, cmd_name)
-    
-def exec_shell_group1_cmd(cmd_keys, cmd_name):
-    return _exec_shell_group_cmd(exec_shell_cmd, cmd_keys, cmd_name)
-    
-def exec_shell_group0_cmd(cmd_keys):
-    return exec_shell_cmd(cmd_keys)
+def exec_shell_recursive_cmd(cmd_key):
+        cmd= globals()[cmd_key]
+        logger.info("************** START {} ***********************".format(cmd['name']))
+        if len(cmd['value']) == 1: 
+            result = exec_shell_cmd(cmd['value'])
+            if result != 0 :
+                logger.info("************** {} FAILED! ***********************".format(cmd['name']))
+                return 1 
+        else:
+            exec_shell_recursive_cmd()
+            pass 
+        logger.info("************** END {} ***********************".format(cmd['name']))
+        return 0
 
-def _exec_shell_group_cmd(_exec_shell_group_cmd_, cmd_keys, cmd_name):
-    logger.info("************** START {} ***********************".format(cmd_name))
-    for k in cmd_keys :
-        cmd_value = get_CMD_MAP()[k]    
-        result = _exec_shell_group_cmd_(cmd_value)
-        if result != 0 :
-            logger.info("************** {} FAILED! ***********************".format(cmd_name))
-            return 1 
-    logger.info("************** END {} ***********************".format(cmd_name))
-    return 0
     
 def exec_shell_cmd(cmd):
     logger.info("\n\n********** EXEC START *********")
@@ -385,37 +382,22 @@ def repl():
         cmd_key = input()
         if cmd_key.lower() == 'exit':
             break
-        
-        cmd_value = None
-        
-        if cmd_value not in  get_CMD_MAP().keys():
+          
+        if cmd_key not in  get_CMD_MAP().keys():
             logger.error('Invalid CMD_KEY={}! Try again.'.format(cmd_key))   
         elif cmd_key == 's3_download':
             print("ENTER source_file:")
             source_file = input()
             cmd_value = s3_download(source_file)
             exec_shell_cmd(cmd_value)
-        if cmd_key == 'backup_script':
+        elif cmd_key == 'backup_script':
             print("ENTER cleanup (true/false)")
             cleanup = input()
             cmd_value = backup_script(cleanup)
             exec_shell_cmd(cmd_value)
         else:
-            cmd_key
-            cmd_func =  globals()[cmd_key]
-            cmd = cmd_func()
-            group = cmd['cmd_group']
-            keys = cmd['cmd_keys']
-            name = cmd['cmd_name']
-            if group == 0:
-                exec_shell_group0_cmd(keys)
-            elif group == 1:
-                exec_shell_group1_cmd(keys, name)
-            elif group == 2:
-                exec_shell_group2_cmd(keys, name)
-            else:
-                logger.error('Invalid group cmd ={}! Try again.'.format(group))  
-                
+            exec_shell_recursive_cmd(cmd_key)
+
 
 if __name__ == "__main__":
     repl()
