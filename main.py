@@ -4,6 +4,7 @@ import config
 import json
 import version
 from setuptools.sandbox import _execfile
+import datetime
  
 logger = create_logger(config.log_file_path, __name__ , config.log_level, True)
 
@@ -54,7 +55,7 @@ def home_path_new():
     return "{}/.{}".format(workspace_new(), modifier_binary_name())
 
 
-def backup_script(cleanup):
+def backup_script(cleanup="true"):
     """ This cmd is applicable only for all networks. 
         It upload source data to the digital ocean space.
         - cleanup: true, false (default true)
@@ -62,21 +63,25 @@ def backup_script(cleanup):
             -false: the local back file will not be deleted.
     """
 
-    return "sh {script_path} {src} {space}  {bkup} {cleanup}".format(script_path=config.backup_script_path,
+    cmd_value = ["sh {script_path} {src} {space}  {bkup} {cleanup}".format(script_path=config.backup_script_path,
                                                            space=config.digital_ocean_space,
                                                            src =full_path_source_data(),
                                                            bkup=full_path_backup_name(),
-                                                           cleanup=cleanup)
+                                                           cleanup=cleanup)]
+    return cmd_format(cmd_value, 'backup_script') 
+    
 
 
-def s3_download(source_file):
+def s3_download(source_file='source_file?'):
     """This cmd is applicable only for all networks.
        It download source data file from the digital ocean space. 
     """
 
-    return "cd {volume_new}; s3cmd get s3://{space}/{src} {src} ; tar -xzvf {src} ; rm {src}".format(volume_new=config.volume_new,
+    cmd_value = ["cd {volume_new}; s3cmd get s3://{space}/{src} {src} ; tar -xzvf {src} ; rm {src}".format(volume_new=config.volume_new,
                                                                                                     space=config.digital_ocean_space,
-                                                                                                    src =source_file)
+                                                                                                    src =source_file)]
+    return cmd_format(cmd_value, 's3_download') 
+    
     
 
 def escape_slash(name):
@@ -235,7 +240,7 @@ def set_new_home_binary():
 def run_backup():
     "This cmd is applicable only for all networks"
 
-    cmd_value = ['stop_node', 'stop_signctrl', 'delete_priv_keys', 'backup_script']
+    cmd_value = ['stop_node', 'stop_signctrl', 'delete_priv_keys', 'backup_script', 'delete_outdated_repo_files']
     return cmd_format(cmd_value, 'run_backup')
     
 
@@ -247,56 +252,74 @@ def restart_node():
 
     
 def restart_new_node():
-    "This cmd is applicable only for orai"
+    "This cmd is applicable for all networks "
     
-    check()
-#     cmd_value = "" 
-#     if config.binary_node == 'oraid':
-#         cmd_value = "docker stop orai_node ; sleep 1s; docker rm orai_node; sleep 1s"
-#     else: 
-#         cmd_value = "sudo systemctl stop {}; sleep 2s".format(config.binary_node)
-#     return cmd_format(cmd_value, 'stop_node', 0)
-
-    cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_new_docker_container', 'start_new_node']
+    cmd_value = "" 
+    if config.binary_node == 'oraid':
+        cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_new_docker_container', 'start_new_node']
+    else: 
+        cmd_value = ['set_new_home_binary', 'restart_node']
     return cmd_format(cmd_value, 'restart_new_node')
 
 
 def restart_cur_node():
-    "This cmd is applicable only for orai"
+    "This cmd is applicable for all networks "
     
-    check()
-    cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_cur_docker_container', 'start_cur_node']
+    if config.binary_node == 'oraid':
+        cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_cur_docker_container', 'start_cur_node']
+    else: 
+        cmd_value = ['restart_node']
     return cmd_format(cmd_value, 'restart_cur_node')
-   
 
-def run_backup_and_restart_node():
-    "This cmd is applicable only for juno"
-    
-    cmd_value = ['run_backup', 'restart_node']
-    return cmd_format(cmd_value, 'run_backup_and_restart_node')
-     
-
-def run_backup_and_set_new_home_and_start_node():
-    "This cmd is applicable only for juno"
-    
-    cmd_value = ['run_backup', 'set_new_home_binary', 'restart_node']
-    return cmd_format(cmd_value, 'run_backup_and_set_new_home_and_start_node')
-   
 
 def run_backup_and_restart_cur_node():
-    "This cmd is applicable only for orai"
+    "This cmd is applicable for all networks"
 
-    check()
     cmd_value = ['run_backup', 'restart_cur_node']
     return cmd_format(cmd_value, 'run_backup_and_restart_cur_node')
 
 
+def delete_repo_file(file_name):
+    cmd_value = ['s3cmd rm  s3://{space}/{file_name}'.format(space=config.digital_ocean_space, file_name=file_name)]
+    return cmd_format(cmd_value, 'delete_repo_file')
+        
 def run_backup_and_restart_new_node():
-    "This cmd is applicable only for orai"
+    "This cmd is applicable only for all network"
 
-    check()
     cmd_value = ['run_backup', 'restart_new_node']
     return cmd_format(cmd_value, 'run_backup_and_restart_new_node')
+
+def list_repository_files():
+    cmd_value = ["s3cmd ls s3://{space}/{binary}*".format(space=config.digital_ocean_space, binary=config.binary_node)]
+    return cmd_format(cmd_value, 'list_repository_files')
+
+# def file_to_delete_from_repo():
+#     cmd = list_repository_files()
+#     output = exec_shell_cmd(cmd['key'], True)
+#     files = output.split("\n")[:-1]
+#     
+#     sorted_List = sorted(files, key=lambda x: datetime.datetime.strptime(x[0:16], '%Y-%m-%d %H:%M'))
+#     
+#     relevant_list = []
+#     for s in sorted_List:
+#         if config.binary_node in s :
+#             relevant_list.append(s.split("   ")[1].replace("s3://chandrodaya/",""))
+#     if len(relevant_list) > 1:
+#         list_to_delete = relevant_list[:-1]
+#         logger.info("list_to_delete = {} ".format(list_to_delete))
+#         return list_to_delete
+#     return []
+
+
+def delete_outdated_repo_files():
+    """ delete outdated files.
+        Keep only the last two backup
+    """
+    
+    backup_number = 2
+    cmd_value = ["""numberFiles=$(s3cmd ls s3://chandrodaya/{binary}* | wc -l) ; if (($numberFiles > {backup_number} )); then s3cmd ls s3://chandrodaya/{binary}* | sort -r | tail -n $(expr $numberFiles - {backup_number}) | grep -E -o "s3://chandrodaya/.*" | while read file; do s3cmd rm $file; done; else echo "there are NO files to delete"; fi""".format(binary=config.binary_node, backup_number=backup_number )]
+    return cmd_format(cmd_value, 'delete_outdate_repo_files')
+        
 
 def display_cmd_value(cmd):
     """cmd: one of the cmd function. The output of such function is in this form:
@@ -316,59 +339,59 @@ def get_CMD_MAP():
     # common key
     cmd_keys = ['stop_node', 'stop_node', 'start_signctrl',
                  'stop_signctrl', 'delete_signctrl_state', 'start_alert',
-                 'stop_alert', 'delete_priv_keys', 'run_backup']
+                 'stop_alert', 'delete_priv_keys', 'restart_new_node', 'restart_cur_node', 
+                 'run_backup', 'run_backup_and_restart_cur_node', 'run_backup_and_restart_new_node',
+                 'list_repository_files', 'delete_outdated_repo_files'
+                ]
     
     
     # network specific key
     if config.binary_node == 'oraid':
         cmd_keys = cmd_keys + ['start_cur_node', 'start_new_node', 'remove_docker_container',
-                     'force_recreate_cur_docker_container', 'force_recreate_new_docker_container',
-                     'restart_new_node', 'restart_cur_node', 'run_backup_and_restart_cur_node',
-                     'run_backup_and_restart_new_node']
+                     'force_recreate_cur_docker_container', 'force_recreate_new_docker_container']
     
     else:
         cmd_keys = cmd_keys + ['start_node', 'set_new_home_binary_systemd_file',
                                'set_new_home_binary_profile_file',
-                               'set_new_home_binary', 'restart_node','run_backup_and_restart_node', 
-                               'run_backup_and_set_new_home_and_start_node']
+                               'set_new_home_binary', 'restart_node']
     
     for cmd_key in cmd_keys:
         CMD_MAP[cmd_key] = display_cmd_value(cmd_key)
         
-    CMD_MAP['backup_script'] = backup_script("cleanup?")
-    CMD_MAP['s3_download'] = s3_download("source_file?")
+    CMD_MAP['backup_script'] = backup_script("cleanup?")['key'][0]
+    CMD_MAP['s3_download'] = s3_download("source_file?")['key'][0]
+    CMD_MAP['delete_repo_file'] = delete_repo_file("file_name?")['key'][0]
     CMD_MAP['EXIT'] = "exit from the program"
     
     return CMD_MAP
 
 
 def exec_shell_recursive_cmd(cmd_key):
-        cmd= globals()[cmd_key]
-        logger.info("************** START {} ***********************".format(cmd['name']))
-        if len(cmd['value']) == 1: 
-            result = exec_shell_cmd(cmd['value'])
-            if result != 0 :
-                logger.info("************** {} FAILED! ***********************".format(cmd['name']))
-                return 1 
-        else:
-            exec_shell_recursive_cmd()
-            pass 
-        logger.info("************** END {} ***********************".format(cmd['name']))
-        return 0
+    cmd = globals()[cmd_key]()
+    logger.info("************** START {} ***********************".format(cmd['name']))
+    if len(cmd['key']) == 1 and  cmd['key'][0] not in list(get_CMD_MAP().keys()): 
+        result = exec_shell_cmd(cmd['key'])
+        if result != 0 :
+            logger.info("************** {} FAILED! ***********************".format(cmd['name']))
+            return 1 
+    else:
+        for _cmd_key in cmd['key']:
+            exec_shell_recursive_cmd(_cmd_key) 
+    logger.info("************** END {} ***********************".format(cmd['name']))
+    return 0
 
     
 def exec_shell_cmd(cmd):
-    logger.info("\n\n********** EXEC START *********")
+    "cmd: shell command to execute"
+    
     result = None
     try:
         logger.info("EXEC CMD: {}".format(cmd))
-        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True, executable='/bin/bash')
         logger.info(result.stdout.decode())
-        logger.info("\n\n********** EXEC PASS! *********")
         return result.returncode 
     except subprocess.CalledProcessError as exc:
-        logger.error(exc.stdout.decode())
-        logger.error("\n\n********** EXEC FAIL! *********")
+        logger.error("\n\n********** EXEC FAIL! {}*********".format(exc.stdout.decode()))
         return (exc.returncode) 
 
 def repl():
@@ -383,23 +406,32 @@ def repl():
         if cmd_key.lower() == 'exit':
             break
           
-        if cmd_key not in  get_CMD_MAP().keys():
+        if cmd_key not in  list(get_CMD_MAP().keys()):
             logger.error('Invalid CMD_KEY={}! Try again.'.format(cmd_key))   
         elif cmd_key == 's3_download':
             print("ENTER source_file:")
             source_file = input()
-            cmd_value = s3_download(source_file)
-            exec_shell_cmd(cmd_value)
+            cmd = s3_download(source_file)
+            exec_shell_cmd(cmd['key'])
         elif cmd_key == 'backup_script':
-            print("ENTER cleanup (true/false)")
+            print("ENTER cleanup (true/false):")
             cleanup = input()
-            cmd_value = backup_script(cleanup)
-            exec_shell_cmd(cmd_value)
+            cmd = backup_script(cleanup)
+            exec_shell_cmd(cmd['key'])
+        elif cmd_key == 'delete_repo_file':
+            print("ENTER file_name:")
+            file_name = input()
+            cmd = delete_repo_file(file_name)
+            exec_shell_cmd(cmd['key'])
         else:
             exec_shell_recursive_cmd(cmd_key)
 
 
 if __name__ == "__main__":
     repl()
+
+
+  
+    
     
     
