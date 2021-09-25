@@ -23,4 +23,7 @@ v1.0.5 (22.09.2021)
 v1.1.0 (23.09.2021)
 	- Major refactoring
 	- Add new cmds
-	
+
+v1.2.0 (25.09.2021)
+	- Add new commands: list_repository_files, delete_outdated_repo_files 
+	- Refactoring	
