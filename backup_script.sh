@@ -61,10 +61,13 @@ if [ ! -z "$GIVENNAME" ]; then
 	   fi 
 	else
 	   showhelp
+	   return 1
         fi
     else
         showhelp
+	return 1
     fi
 else
     showhelp
+    return 1
 fi
