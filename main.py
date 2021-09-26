@@ -55,7 +55,7 @@ def home_path_new():
     return "{}/.{}".format(workspace_new(), modifier_binary_name())
 
 
-def backup_script(cleanup="true"):
+def backup_script(cleanup="cleanup?"):
     """ This cmd is applicable only for all networks. 
         It upload source data to the digital ocean space.
         - cleanup: true, false (default true)
@@ -69,7 +69,18 @@ def backup_script(cleanup="true"):
                                                            bkup=full_path_backup_name(),
                                                            cleanup=cleanup)]
     return cmd_format(cmd_value, 'backup_script') 
-    
+
+def backup_script_and_delete_local_copy():
+    """ run the backup scrip to upload source to digital ocean and 
+        delete the local copy in the new volume.
+    """
+    return backup_script(cleanup="true")
+
+def backup_script_and_keep_local_copy():
+    """ run the backup scrip to upload source to digital ocean and 
+        keep a local copy in the new volume.
+    """
+    return backup_script(cleanup="false")
 
 
 def s3_download(source_file='source_file?'):
@@ -82,7 +93,12 @@ def s3_download(source_file='source_file?'):
                                                                                                     src =source_file)]
     return cmd_format(cmd_value, 's3_download') 
     
-    
+
+def unzip_new_file():
+    """This cmd is applicable only for all networks.
+    """
+    cmd_value = ["""cd {volume_new}; numberFiles=$(ls | wc -l); if (($numberFiles > 1 )); then echo "There are too many file to unzip!" ;else fileName=`ls $junod*.gz`; tar -xzvf $fileName ; rm $fileName  ;fi""".format(volume_new=config.volume_new)]
+    return cmd_format(cmd_value, 'unzip_new_file') 
 
 def escape_slash(name):
     return name.replace("/", "\/")
@@ -237,10 +253,18 @@ def set_new_home_binary():
     return cmd_format(cmd_value, 'set_new_home_binary')
     
     
-def run_backup():
+def run_backup_delete_local_copy():
     "This cmd is applicable only for all networks"
 
-    cmd_value = ['stop_node', 'stop_signctrl', 'delete_priv_keys', 'backup_script', 'delete_outdated_repo_files']
+    cmd_value = ['stop_node', 'stop_signctrl', 'delete_priv_keys', 'backup_script_and_delete_local_copy', 'delete_repo_outdated_files']
+    return cmd_format(cmd_value, 'run_backup')
+
+def run_backup_keep_local_copy():
+    """This cmd is applicable only for all networks. 
+       Create a backup and keep a local copy in the volume_new folder. 
+    """
+ 
+    cmd_value = ['stop_node', 'stop_signctrl', 'delete_priv_keys', 'backup_script_and_keep_local_copy', 'unzip_new_file', 'delete_repo_outdated_files']
     return cmd_format(cmd_value, 'run_backup')
     
 
@@ -279,39 +303,22 @@ def run_backup_and_restart_cur_node():
     return cmd_format(cmd_value, 'run_backup_and_restart_cur_node')
 
 
-def delete_repo_file(file_name):
+def delete_repo_file(file_name='file_name?'):
     cmd_value = ['s3cmd rm  s3://{space}/{file_name}'.format(space=config.digital_ocean_space, file_name=file_name)]
     return cmd_format(cmd_value, 'delete_repo_file')
         
 def run_backup_and_restart_new_node():
     "This cmd is applicable only for all network"
 
-    cmd_value = ['run_backup', 'restart_new_node']
+    cmd_value = ['run_backup_keep_local_copy', 'restart_new_node']
     return cmd_format(cmd_value, 'run_backup_and_restart_new_node')
 
 def list_repository_files():
     cmd_value = ["s3cmd ls s3://{space}/{binary}*".format(space=config.digital_ocean_space, binary=config.binary_node)]
     return cmd_format(cmd_value, 'list_repository_files')
 
-# def file_to_delete_from_repo():
-#     cmd = list_repository_files()
-#     output = exec_shell_cmd(cmd['key'], True)
-#     files = output.split("\n")[:-1]
-#     
-#     sorted_List = sorted(files, key=lambda x: datetime.datetime.strptime(x[0:16], '%Y-%m-%d %H:%M'))
-#     
-#     relevant_list = []
-#     for s in sorted_List:
-#         if config.binary_node in s :
-#             relevant_list.append(s.split("   ")[1].replace("s3://chandrodaya/",""))
-#     if len(relevant_list) > 1:
-#         list_to_delete = relevant_list[:-1]
-#         logger.info("list_to_delete = {} ".format(list_to_delete))
-#         return list_to_delete
-#     return []
 
-
-def delete_outdated_repo_files():
+def delete_repo_outdated_files():
     """ delete outdated files.
         Keep only the last two backup
     """
@@ -320,6 +327,11 @@ def delete_outdated_repo_files():
     cmd_value = ["""numberFiles=$(s3cmd ls s3://chandrodaya/{binary}* | wc -l) ; if (($numberFiles > {backup_number} )); then s3cmd ls s3://chandrodaya/{binary}* | sort -r | tail -n $(expr $numberFiles - {backup_number}) | grep -E -o "s3://chandrodaya/.*" | while read file; do s3cmd rm $file; done; else echo "there are NO files to delete"; fi""".format(binary=config.binary_node, backup_number=backup_number )]
     return cmd_format(cmd_value, 'delete_outdate_repo_files')
         
+def EXIT():
+    "This cmd is applicable only for all network"
+    cmd_value = ["Exit from the program"]
+    return cmd_format(cmd_value, 'EXIT') 
+
 
 def display_cmd_value(cmd):
     """cmd: one of the cmd function. The output of such function is in this form:
@@ -333,18 +345,23 @@ def display_cmd_value(cmd):
     return '; '.join(cmd_value)
 
     
+CMD_KEY_INVARIANT = [ 'EXIT', 'delete_repo_file', 's3_download', 'run_backup_and_restart_cur_node', 'run_backup_and_restart_new_node',
+                 'run_backup_keep_local_copy', 'run_backup_delete_local_copy', 'delete_signctrl_state',
+                 'start_signctrl', 'stop_signctrl', 'start_alert',
+                 'stop_alert', 
+    ]    
 def get_CMD_MAP(): 
     
     CMD_MAP = {}
+    
     # common key
-    cmd_keys = ['stop_node', 'stop_node', 'start_signctrl',
-                 'stop_signctrl', 'delete_signctrl_state', 'start_alert',
-                 'stop_alert', 'delete_priv_keys', 'restart_new_node', 'restart_cur_node', 
-                 'run_backup', 'run_backup_and_restart_cur_node', 'run_backup_and_restart_new_node',
-                 'list_repository_files', 'delete_outdated_repo_files'
+    cmd_keys = CMD_KEY_INVARIANT + ['stop_node', 'stop_node', 'delete_signctrl_state', 
+                                    'delete_priv_keys', 'restart_new_node', 'restart_cur_node', 
+                                     'list_repository_files', 'delete_repo_outdated_files',
+                                     'backup_script_and_keep_local_copy', 'backup_script_and_delete_local_copy',
+                                     'backup_script', 'unzip_new_file'
                 ]
-    
-    
+
     # network specific key
     if config.binary_node == 'oraid':
         cmd_keys = cmd_keys + ['start_cur_node', 'start_new_node', 'remove_docker_container',
@@ -354,16 +371,12 @@ def get_CMD_MAP():
         cmd_keys = cmd_keys + ['start_node', 'set_new_home_binary_systemd_file',
                                'set_new_home_binary_profile_file',
                                'set_new_home_binary', 'restart_node']
-    
+        
+
     for cmd_key in cmd_keys:
         CMD_MAP[cmd_key] = display_cmd_value(cmd_key)
-        
-    CMD_MAP['backup_script'] = backup_script("cleanup?")['key'][0]
-    CMD_MAP['s3_download'] = s3_download("source_file?")['key'][0]
-    CMD_MAP['delete_repo_file'] = delete_repo_file("file_name?")['key'][0]
-    CMD_MAP['EXIT'] = "exit from the program"
-    
-    return CMD_MAP
+
+    return dict(sorted(CMD_MAP.items()))
 
 
 def exec_shell_recursive_cmd(cmd_key):
