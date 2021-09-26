@@ -3,8 +3,7 @@ from utils import create_logger
 import config
 import json
 import version
-from setuptools.sandbox import _execfile
-import datetime
+import sys
  
 logger = create_logger(config.log_file_path, __name__ , config.log_level, True)
 
@@ -470,8 +469,20 @@ def repl():
             exec_shell_recursive_cmd(cmd_key)
 
 
-if __name__ == "__main__":
-    repl()
+if __name__ == "__main__":    
+    nr_args = len(sys.argv)
+    if nr_args == 1:
+        repl()
+    elif nr_args == 2:
+        cmd_key = sys.argv[1]    
+        if cmd_key not in  list(get_CMD_MAP().keys()):
+            logger.error('Invalid cmd_key={}! Try again.'.format(cmd_key))
+        else:
+            exec_shell_recursive_cmd(cmd_key)
+    else:
+        print("Too many arguments!")
+    
+    
 
 
   
