@@ -94,12 +94,6 @@ def s3_download(source_file='source_file?'):
     return cmd_format(cmd_value, 's3_download') 
     
 
-def unzip_new_file():
-    """This cmd is applicable only for all networks.
-    """
-    cmd_value = ["""cd {volume_new}; numberFiles=$(ls | wc -l); if (($numberFiles > 1 )); then echo "There are too many file to unzip!" ;else fileName=`ls $junod*.gz`; tar -xzvf $fileName ; rm $fileName  ;fi""".format(volume_new=config.volume_new)]
-    return cmd_format(cmd_value, 'unzip_new_file') 
-
 def escape_slash(name):
     return name.replace("/", "\/")
 
@@ -107,27 +101,58 @@ def escape_slash(name):
 def cmd_format(cmd_value, cmd_name):
     return {'key': cmd_value, 'name': cmd_name.upper()}
 
-def set_new_home_binary_systemd_file():
+def set_home_binary_systemd_file(home_path):
     "this cmd is applicable only for juno"
 
-    HOME_PATH_NEW = escape_slash(home_path_new()) 
+    HOME_PATH_NEW = escape_slash(home_path) 
     HOME = 'HOME_' + config.binary_node.upper()
     cmd_value = ["""sed -i "s/\\"{HOME}=*.*/\\"{HOME}={HOME_PATH_NEW}\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload""".format(HOME=HOME,
                                                                                                                                         HOME_PATH_NEW=HOME_PATH_NEW)]
     return cmd_format(cmd_value, 'start_cur_node')
 
 
-def set_new_home_binary_profile_file():
+def set_home_binary_profile_file(home_path):
     "this cmd is applicable only for juno"
 
-    HOME_PATH_NEW = escape_slash(home_path_new()) 
+    HOME_PATH_NEW = escape_slash(home_path) 
     HOME = 'HOME_' + config.binary_node.upper()
     # the cmd: "source . ~/.profile" does not work.
     # Therefore we have replaced it with an equivalent one: ". ~/.profile"
     cmd_value = ["""sed -i "s/{HOME}=*.*/{HOME}={HOME_PATH_NEW}/" ~/.profile ; . ~/.profile""".format(HOME=HOME,
                                                                              HOME_PATH_NEW=HOME_PATH_NEW)]
-    return cmd_format(cmd_value, 'set_new_home_binary_profile_file') 
+    return cmd_format(cmd_value, 'set_home_binary_profile_file_new') 
 
+
+
+
+def set_home_binary_systemd_file_new():
+    return set_home_binary_systemd_file(home_path_new())
+
+
+def set_home_binary_profile_file_new():
+    return set_home_binary_profile_file(home_path_new())
+    
+
+def set_home_binary_new():
+    "this cmd is applicable only for juno"
+    
+    cmd_value = ['set_home_binary_systemd_file_new', 'set_home_binary_profile_file_new']
+    return cmd_format(cmd_value, 'set_home_binary_new')
+
+
+def set_home_binary_systemd_file_cur():
+    return set_home_binary_systemd_file(home_path_current())
+
+
+def set_home_binary_profile_file_cur():
+    return set_home_binary_profile_file(home_path_current())
+
+
+def set_home_binary_cur():
+    "this cmd is applicable only for juno"
+    
+    cmd_value = ['set_home_binary_systemd_file_cur', 'set_home_binary_profile_file_cur']
+    return cmd_format(cmd_value, 'set_home_binary_cur')
 
 def start_node():
     "this cmd is applicable only for juno"
@@ -244,13 +269,6 @@ def delete_signctrl_state():
 
     cmd_value = ["rm -f /home/signer/.signctrl/signctrl_state.json"]
     return cmd_format(cmd_value, 'delete_signctrl_state')
-
- 
-def set_new_home_binary():
-    "this cmd is applicable only for juno"
-    
-    cmd_value = ['set_new_home_binary_systemd_file', 'set_new_home_binary_profile_file']
-    return cmd_format(cmd_value, 'set_new_home_binary')
     
     
 def run_backup_delete_local_copy():
@@ -264,7 +282,7 @@ def run_backup_keep_local_copy():
        Create a backup and keep a local copy in the volume_new folder. 
     """
  
-    cmd_value = ['stop_node', 'stop_signctrl', 'delete_priv_keys', 'backup_script_and_keep_local_copy', 'unzip_new_file', 'delete_repo_outdated_files']
+    cmd_value = ['stop_node', 'stop_signctrl', 'delete_priv_keys', 'backup_script_and_keep_local_copy', 'unzip_backup_file', 'delete_repo_outdated_files']
     return cmd_format(cmd_value, 'run_backup')
     
 
@@ -282,7 +300,7 @@ def restart_new_node():
     if config.binary_node == 'oraid':
         cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_new_docker_container', 'start_new_node']
     else: 
-        cmd_value = ['set_new_home_binary', 'restart_node']
+        cmd_value = ['set_home_binary_new', 'restart_node']
     return cmd_format(cmd_value, 'restart_new_node')
 
 
@@ -292,20 +310,16 @@ def restart_cur_node():
     if config.binary_node == 'oraid':
         cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_cur_docker_container', 'start_cur_node']
     else: 
-        cmd_value = ['restart_node']
+        cmd_value = ['set_home_binary_cur', 'restart_node']
     return cmd_format(cmd_value, 'restart_cur_node')
 
 
 def run_backup_and_restart_cur_node():
     "This cmd is applicable for all networks"
 
-    cmd_value = ['run_backup', 'restart_cur_node']
+    cmd_value = ['run_backup_delete_local_copy', 'restart_cur_node']
     return cmd_format(cmd_value, 'run_backup_and_restart_cur_node')
 
-
-def delete_repo_file(file_name='file_name?'):
-    cmd_value = ['s3cmd rm  s3://{space}/{file_name}'.format(space=config.digital_ocean_space, file_name=file_name)]
-    return cmd_format(cmd_value, 'delete_repo_file')
         
 def run_backup_and_restart_new_node():
     "This cmd is applicable only for all network"
@@ -313,9 +327,15 @@ def run_backup_and_restart_new_node():
     cmd_value = ['run_backup_keep_local_copy', 'restart_new_node']
     return cmd_format(cmd_value, 'run_backup_and_restart_new_node')
 
+
 def list_repository_files():
     cmd_value = ["s3cmd ls s3://{space}/{binary}*".format(space=config.digital_ocean_space, binary=config.binary_node)]
     return cmd_format(cmd_value, 'list_repository_files')
+
+
+def delete_repo_file(file_name='file_name?'):
+    cmd_value = ['s3cmd rm  s3://{space}/{file_name}'.format(space=config.digital_ocean_space, file_name=file_name)]
+    return cmd_format(cmd_value, 'delete_repo_file')
 
 
 def delete_repo_outdated_files():
@@ -326,7 +346,16 @@ def delete_repo_outdated_files():
     backup_number = 2
     cmd_value = ["""numberFiles=$(s3cmd ls s3://chandrodaya/{binary}* | wc -l) ; if (($numberFiles > {backup_number} )); then s3cmd ls s3://chandrodaya/{binary}* | sort -r | tail -n $(expr $numberFiles - {backup_number}) | grep -E -o "s3://chandrodaya/.*" | while read file; do s3cmd rm $file; done; else echo "there are NO files to delete"; fi""".format(binary=config.binary_node, backup_number=backup_number )]
     return cmd_format(cmd_value, 'delete_outdate_repo_files')
-        
+
+
+def unzip_backup_file():
+    """This cmd is applicable only for all networks.
+    """
+    cmd_value = ["""cd {volume_new}; numberFiles=$(ls | wc -l); if (($numberFiles == 1 )); then fileName=`ls ${binary}*.gz`; tar -xzvf $fileName ; rm $fileName  ; else echo "There are too many file to unzip or the folder is empty!" ;fi""".format(volume_new=config.volume_new,
+                                                                                                                                                                                                                             binary=config.binary_node)]
+    return cmd_format(cmd_value, 'unzip_backup_file') 
+
+      
 def EXIT():
     "This cmd is applicable only for all network"
     cmd_value = ["Exit from the program"]
@@ -359,7 +388,7 @@ def get_CMD_MAP():
                                     'delete_priv_keys', 'restart_new_node', 'restart_cur_node', 
                                      'list_repository_files', 'delete_repo_outdated_files',
                                      'backup_script_and_keep_local_copy', 'backup_script_and_delete_local_copy',
-                                     'backup_script', 'unzip_new_file'
+                                     'backup_script', 'unzip_backup_file'
                 ]
 
     # network specific key
@@ -368,9 +397,12 @@ def get_CMD_MAP():
                      'force_recreate_cur_docker_container', 'force_recreate_new_docker_container']
     
     else:
-        cmd_keys = cmd_keys + ['start_node', 'set_new_home_binary_systemd_file',
-                               'set_new_home_binary_profile_file',
-                               'set_new_home_binary', 'restart_node']
+        cmd_keys = cmd_keys + ['start_node', 'set_home_binary_systemd_file_new',
+                               'set_home_binary_profile_file_new',
+                               'set_home_binary_new', 'set_home_binary_systemd_file_cur',
+                               'set_home_binary_profile_file_cur',
+                               'set_home_binary_cur','restart_node'
+                               ]
         
 
     for cmd_key in cmd_keys:
