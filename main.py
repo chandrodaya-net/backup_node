@@ -123,8 +123,6 @@ def set_home_binary_profile_file(home_path):
     return cmd_format(cmd_value, 'set_home_binary_profile_file_new') 
 
 
-
-
 def set_home_binary_systemd_file_new():
     return set_home_binary_systemd_file(home_path_new())
 
@@ -154,6 +152,7 @@ def set_home_binary_cur():
     cmd_value = ['set_home_binary_systemd_file_cur', 'set_home_binary_profile_file_cur']
     return cmd_format(cmd_value, 'set_home_binary_cur')
 
+
 def start_node():
     "this cmd is applicable only for juno"
     
@@ -174,7 +173,6 @@ def start_cur_node():
     cmd_value = [_start_node(workspace_current())]
     return cmd_format(cmd_value, 'start_cur_node')
 
-    
     
 def start_new_node():
     "this cmd is applicable only for orai"
