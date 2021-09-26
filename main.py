@@ -4,6 +4,8 @@ import config
 import json
 import version
 import sys
+import requests
+import traceback
  
 logger = create_logger(config.log_file_path, __name__ , config.log_level, True)
 
@@ -469,6 +471,15 @@ def repl():
             exec_shell_recursive_cmd(cmd_key)
 
 
+def send_msg_to_telegram(msg):
+    try:
+        requestURL = "https://api.telegram.org/bot" + str(config.telegram_token) + "/sendMessage?chat_id=" + config.telegram_chat_id + "&text="
+        requestURL = requestURL + str(msg)
+        requests.get(requestURL, timeout=1)
+    except Exception:
+        error_msg = traceback.format_exc()
+        logger.error(error_msg)
+        
 if __name__ == "__main__":    
     nr_args = len(sys.argv)
     if nr_args == 1:
@@ -478,9 +489,11 @@ if __name__ == "__main__":
         if cmd_key not in  list(get_CMD_MAP().keys()):
             logger.error('Invalid cmd_key={}! Try again.'.format(cmd_key))
         else:
-            exec_shell_recursive_cmd(cmd_key)
+            res = exec_shell_recursive_cmd(cmd_key)
+            msg = "{}: {}".format(cmd_key.upper(), 'PASS' if res == 0 else 'FAIL')    
+            send_msg_to_telegram(msg)
     else:
-        print("Too many arguments!")
+        logger.error('Too many arguments!')
     
     
 
