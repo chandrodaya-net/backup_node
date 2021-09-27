@@ -53,12 +53,21 @@ cleanUp(){
     fi
 }
 
+
 if [ ! -z "$GIVENNAME" ]; then
     if tarandzip; then
         if movetoSpace; then
 	  if [ "$4" != "false" ]; then
-	     cleanUp
+               if cleanUp; then
+ 		  echo "\n##### BACKUP DONE #####\n"
+		  return 0
+		else
+		    showhelp
+		    return 1
+		fi 			  
 	   fi 
+	   echo "\n##### BACKUP DONE #####\n"
+	   return 0
 	else
 	   showhelp
 	   return 1
