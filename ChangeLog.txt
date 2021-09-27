@@ -30,3 +30,18 @@ v1.2.0 (25.09.2021)
 	
 v1.3.0 (26.09.2021)
 	- Add cmd argument to pass to the script. If the argument is not given the script start the repl.
+	
+v1.4.0 (27.09.2021)
+	- Add cmd convention NEW/CUR suffix. A cmd with suffix NEW/CUR means the cmd is related to the NEW/CUR home path data directory the of the blockchain
+	- Add new cmds:
+		- config_node_without_signctrl_NEW
+		- config_node_without_signctrl_CUR
+		- restart_node_without_signctrl_NEW
+		- restart_node_without_signctrl_CUR
+		- priv_validator_laddr_config_reset_NEW
+		- priv_validator_laddr_config_reset_CUR
+		- priv_validator_laddr_config_signctrl_NEW
+		- priv_validator_laddr_config_signctrl_CUR
+		- copy_priv_validator_key_to_home_NEW 
+		- copy_priv_validator_key_to_home_CUR
+	
