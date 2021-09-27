@@ -44,15 +44,15 @@ class TestCommon(unittest.TestCase):
                              'delete_signctrl_state': 'rm -f /home/signer/.signctrl/signctrl_state.json',
                             'run_backup_keep_local_copy': 'stop_node; stop_signctrl; delete_priv_keys; backup_script_and_keep_local_copy; unzip_backup_file; delete_repo_outdated_files', 
                             'run_backup_delete_local_copy': 'stop_node; stop_signctrl; delete_priv_keys; backup_script_and_delete_local_copy; delete_repo_outdated_files',
-                            'run_backup_and_restart_cur_node': 'run_backup_delete_local_copy; restart_cur_node',
-                            'run_backup_and_restart_new_node': 'run_backup_keep_local_copy; restart_new_node',
+                            'run_backup_and_restart_node_CUR': 'run_backup_delete_local_copy; restart_node_CUR',
+                            'run_backup_and_restart_node_NEW': 'run_backup_keep_local_copy; restart_node_NEW',
                              's3_download': 'cd /mnt/volume_fra1_02; s3cmd get s3://chandrodaya/source_file? source_file? ; tar -xzvf source_file? ; rm source_file?',                   
                              'delete_repo_file': 's3cmd rm  s3://chandrodaya/file_name?',
                             'EXIT': 'Exit from the program', 
                             'config_node_without_signctrl_NEW': 'priv_validator_laddr_config_reset_NEW; copy_priv_validator_key_to_home_NEW',
                             'config_node_without_signctrl_CUR': 'priv_validator_laddr_config_reset_CUR; copy_priv_validator_key_to_home_CUR', 
-                            'restart_node_without_signctrl_NEW': 'config_node_without_signctrl_NEW; restart_new_node', 
-                            'restart_node_without_signctrl_CUR': 'config_node_without_signctrl_CUR; restart_cur_node',
+                            'restart_node_without_signctrl_NEW': 'config_node_without_signctrl_NEW; restart_node_NEW', 
+                            'restart_node_without_signctrl_CUR': 'config_node_without_signctrl_CUR; restart_node_CUR',
                            }
         
         actual_CMD_MAP = main.get_CMD_MAP()
@@ -73,20 +73,20 @@ class TestMainJuno(unittest.TestCase):
         expected_cmd = '/mnt/volume_fra1_02/junod'
         self.assertEqual(main.full_path_backup_name(), expected_cmd)
     
-    def test_home_path_current(self):
+    def test_home_path_CUR(self):
         expected_cmd = '/mnt/volume_fra1_01/workspace/.juno'
-        self.assertEqual(main.home_path_current(), expected_cmd)
+        self.assertEqual(main.home_path_CUR(), expected_cmd)
     
-    def test_home_path_new(self):
+    def test_home_path_NEW(self):
         expected_cmd = '/mnt/volume_fra1_02/workspace/.juno'
-        self.assertEqual(main.home_path_new(), expected_cmd)
+        self.assertEqual(main.home_path_NEW(), expected_cmd)
     
     def test_CMD_MAP(self):
         expected_CMD_MAP = {'start_node': 'sudo systemctl start junod', 
                             'stop_node': 'sudo systemctl stop junod; sleep 2s', 
                             'restart_node': 'delete_signctrl_state; start_signctrl; start_node',
-                            'restart_new_node': 'set_home_binary_new; restart_node',
-                            'restart_cur_node': 'set_home_binary_cur; restart_node',
+                            'restart_node_NEW': 'set_home_binary_NEW; restart_node',
+                            'restart_node_CUR': 'set_home_binary_CUR; restart_node',
                             'copy_priv_validator_key_to_home_NEW': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_02/workspace/.juno/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_02/workspace/.juno/data/', 
                             'copy_priv_validator_key_to_home_CUR': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_01/workspace/.juno/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_01/workspace/.juno/data/',
                             'priv_validator_laddr_config_reset_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_02/workspace/.juno/config/config.toml',
@@ -98,12 +98,12 @@ class TestMainJuno(unittest.TestCase):
                             'backup_script_and_keep_local_copy': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/junod false', 
                             'backup_script_and_delete_local_copy': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/junod true',
                             'unzip_backup_file': 'cd /mnt/volume_fra1_02; numberFiles=$(ls | wc -l); if (($numberFiles == 1 )); then fileName=`ls $junod*.gz`; tar -xzvf $fileName ; rm $fileName  ; else echo "There are too many file to unzip or the folder is empty!" ;fi',
-                            'set_home_binary_systemd_file_new': 'sed -i "s/\\"HOME_JUNOD=*.*/\\"HOME_JUNOD=\\/mnt\\/volume_fra1_02\\/workspace\\/.juno\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload', 
-                            'set_home_binary_profile_file_new': 'sed -i "s/HOME_JUNOD=*.*/HOME_JUNOD=\\/mnt\\/volume_fra1_02\\/workspace\\/.juno/" ~/.profile ; . ~/.profile', 
-                            'set_home_binary_new': 'set_home_binary_systemd_file_new; set_home_binary_profile_file_new', 
-                            'set_home_binary_systemd_file_cur': 'sed -i "s/\\"HOME_JUNOD=*.*/\\"HOME_JUNOD=\\/mnt\\/volume_fra1_01\\/workspace\\/.juno\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload', 
-                            'set_home_binary_profile_file_cur': 'sed -i "s/HOME_JUNOD=*.*/HOME_JUNOD=\\/mnt\\/volume_fra1_01\\/workspace\\/.juno/" ~/.profile ; . ~/.profile', 
-                            'set_home_binary_cur': 'set_home_binary_systemd_file_cur; set_home_binary_profile_file_cur', 
+                            'set_home_binary_systemd_file_NEW': 'sed -i "s/\\"HOME_JUNOD=*.*/\\"HOME_JUNOD=\\/mnt\\/volume_fra1_02\\/workspace\\/.juno\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload', 
+                            'set_home_binary_profile_file_NEW': 'sed -i "s/HOME_JUNOD=*.*/HOME_JUNOD=\\/mnt\\/volume_fra1_02\\/workspace\\/.juno/" ~/.profile ; . ~/.profile', 
+                            'set_home_binary_NEW': 'set_home_binary_systemd_file_NEW; set_home_binary_profile_file_NEW', 
+                            'set_home_binary_systemd_file_CUR': 'sed -i "s/\\"HOME_JUNOD=*.*/\\"HOME_JUNOD=\\/mnt\\/volume_fra1_01\\/workspace\\/.juno\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload', 
+                            'set_home_binary_profile_file_CUR': 'sed -i "s/HOME_JUNOD=*.*/HOME_JUNOD=\\/mnt\\/volume_fra1_01\\/workspace\\/.juno/" ~/.profile ; . ~/.profile', 
+                            'set_home_binary_CUR': 'set_home_binary_systemd_file_CUR; set_home_binary_profile_file_CUR', 
                             'list_repository_files': 's3cmd ls s3://chandrodaya/junod*',
                             'delete_repo_outdated_files': """numberFiles=$(s3cmd ls s3://chandrodaya/junod* | wc -l) ; if (($numberFiles > 2 )); then s3cmd ls s3://chandrodaya/junod* | sort -r | tail -n $(expr $numberFiles - 2) | grep -E -o "s3://chandrodaya/.*" | while read file; do s3cmd rm $file; done; else echo "there are NO files to delete"; fi""",
                             }
@@ -134,10 +134,10 @@ class TestMainOrai(unittest.TestCase):
         self.assertEqual(main.full_path_backup_name(), expected_cmd)
     
     def test_CMD_MAP(self):
-        expected_CMD_MAP = {'start_new_node': "cd /mnt/volume_fra1_02/workspace; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'", 
-                            'start_cur_node': "cd /mnt/volume_fra1_01/workspace; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'",
-                            'restart_new_node': 'delete_signctrl_state; start_signctrl; force_recreate_new_docker_container; start_new_node',
-                            'restart_cur_node': 'delete_signctrl_state; start_signctrl; force_recreate_cur_docker_container; start_cur_node',
+        expected_CMD_MAP = {'start_node_NEW': "cd /mnt/volume_fra1_02/workspace; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'", 
+                            'start_node_CUR': "cd /mnt/volume_fra1_01/workspace; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'",
+                            'restart_node_NEW': 'delete_signctrl_state; start_signctrl; force_recreate_docker_container_NEW; start_node_NEW',
+                            'restart_node_CUR': 'delete_signctrl_state; start_signctrl; force_recreate_docker_container_CUR; start_node_CUR',
                             'copy_priv_validator_key_to_home_NEW': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_02/workspace/.oraid/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_02/workspace/.oraid/data/',
                             'copy_priv_validator_key_to_home_CUR': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_01/workspace/.oraid/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_01/workspace/.oraid/data/',
                             'priv_validator_laddr_config_reset_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_02/workspace/.oraid/config/config.toml',
@@ -146,8 +146,8 @@ class TestMainOrai(unittest.TestCase):
                             'priv_validator_laddr_config_signctrl_CUR': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" /mnt/volume_fra1_01/workspace/.oraid/config/config.toml',
                             'stop_node': 'docker stop orai_node ; sleep 1s; docker rm orai_node; sleep 1s',
                             'remove_docker_container': 'docker rm orai_node',
-                            'force_recreate_new_docker_container': 'cd /mnt/volume_fra1_02/workspace ; docker-compose pull && docker-compose up -d --force-recreate',
-                            'force_recreate_cur_docker_container': 'cd /mnt/volume_fra1_01/workspace ; docker-compose pull && docker-compose up -d --force-recreate',
+                            'force_recreate_docker_container_NEW': 'cd /mnt/volume_fra1_02/workspace ; docker-compose pull && docker-compose up -d --force-recreate',
+                            'force_recreate_docker_container_CUR': 'cd /mnt/volume_fra1_01/workspace ; docker-compose pull && docker-compose up -d --force-recreate',
                             'delete_priv_keys': 'rm -f /mnt/volume_fra1_01/workspace/.oraid/config/node_key.json; rm -f /mnt/volume_fra1_01/workspace/.oraid/config/priv_validator_key.json; rm -f /mnt/volume_fra1_01/workspace/.oraid/data/priv_validator_state.json' ,
                             'backup_script': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/oraid cleanup?', 
                             'backup_script_and_keep_local_copy': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/oraid false', 

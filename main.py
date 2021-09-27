@@ -44,13 +44,13 @@ def full_path_backup_name():
     return  "{}/{}".format(config.volume_new, config.binary_node)
 
 
-def home_path_current():
+def home_path_CUR():
     "Path to the current blockchain datafolder"
     
     return "{}/.{}".format(workspace_current(), modifier_binary_name())
 
 
-def home_path_new():
+def home_path_NEW():
     "Path to the new blockchain datafolder"
     
     return "{}/.{}".format(workspace_new(), modifier_binary_name())
@@ -109,56 +109,56 @@ def set_home_binary_systemd_file(home_path):
     HOME = 'HOME_' + config.binary_node.upper()
     cmd_value = ["""sed -i "s/\\"{HOME}=*.*/\\"{HOME}={HOME_PATH_NEW}\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload""".format(HOME=HOME,
                                                                                                                                         HOME_PATH_NEW=HOME_PATH_NEW)]
-    return cmd_format(cmd_value, 'start_cur_node')
+    return cmd_format(cmd_value, 'start_node_CUR')
 
 
 def set_home_binary_profile_file(home_path):
     "this cmd is applicable only for juno"
 
-    HOME_PATH_NEW = escape_slash(home_path) 
+    HOME_PATH = escape_slash(home_path) 
     HOME = 'HOME_' + config.binary_node.upper()
     # the cmd: "source . ~/.profile" does not work.
     # Therefore we have replaced it with an equivalent one: ". ~/.profile"
-    cmd_value = ["""sed -i "s/{HOME}=*.*/{HOME}={HOME_PATH_NEW}/" ~/.profile ; . ~/.profile""".format(HOME=HOME,
-                                                                             HOME_PATH_NEW=HOME_PATH_NEW)]
-    return cmd_format(cmd_value, 'set_home_binary_profile_file_new') 
+    cmd_value = ["""sed -i "s/{HOME}=*.*/{HOME}={HOME_PATH}/" ~/.profile ; . ~/.profile""".format(HOME=HOME,
+                                                                             HOME_PATH=HOME_PATH)]
+    return cmd_format(cmd_value, 'set_home_binary_profile_file_NEW') 
 
 
-def set_home_binary_systemd_file_new():
-    return set_home_binary_systemd_file(home_path_new())
+def set_home_binary_systemd_file_NEW():
+    return set_home_binary_systemd_file(home_path_NEW())
 
 
-def set_home_binary_profile_file_new():
-    return set_home_binary_profile_file(home_path_new())
+def set_home_binary_profile_file_NEW():
+    return set_home_binary_profile_file(home_path_NEW())
     
 
-def set_home_binary_new():
+def set_home_binary_NEW():
     "this cmd is applicable only for juno"
     
-    cmd_value = ['set_home_binary_systemd_file_new', 'set_home_binary_profile_file_new']
-    return cmd_format(cmd_value, 'set_home_binary_new')
+    cmd_value = ['set_home_binary_systemd_file_NEW', 'set_home_binary_profile_file_NEW']
+    return cmd_format(cmd_value, 'set_home_binary_NEW')
 
 
-def set_home_binary_systemd_file_cur():
-    return set_home_binary_systemd_file(home_path_current())
+def set_home_binary_systemd_file_CUR():
+    return set_home_binary_systemd_file(home_path_CUR())
 
 
-def set_home_binary_profile_file_cur():
-    return set_home_binary_profile_file(home_path_current())
+def set_home_binary_profile_file_CUR():
+    return set_home_binary_profile_file(home_path_CUR())
 
 
-def set_home_binary_cur():
+def set_home_binary_CUR():
     "this cmd is applicable only for juno"
     
-    cmd_value = ['set_home_binary_systemd_file_cur', 'set_home_binary_profile_file_cur']
-    return cmd_format(cmd_value, 'set_home_binary_cur')
+    cmd_value = ['set_home_binary_systemd_file_CUR', 'set_home_binary_profile_file_CUR']
+    return cmd_format(cmd_value, 'set_home_binary_CUR')
 
 
 def start_node():
     "this cmd is applicable only for juno"
     
     cmd_value = ["sudo systemctl start {}".format(config.binary_node)]
-    return cmd_format(cmd_value, 'start_cur_node')
+    return cmd_format(cmd_value, 'start_node_CUR')
 
 
 def _start_node(workspace):
@@ -168,18 +168,18 @@ def _start_node(workspace):
     return "cd {}; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'".format(workspace)
 
     
-def start_cur_node():
+def start_node_CUR():
     "this cmd is applicable only for orai"
     
     cmd_value = [_start_node(workspace_current())]
-    return cmd_format(cmd_value, 'start_cur_node')
+    return cmd_format(cmd_value, 'start_node_CUR')
 
     
-def start_new_node():
+def start_node_NEW():
     "this cmd is applicable only for orai"
 
     cmd_value = [_start_node(workspace_new())]
-    return cmd_format(cmd_value, 'start_new_node')
+    return cmd_format(cmd_value, 'start_node_NEW')
 
 
 def stop_node():
@@ -203,9 +203,9 @@ def stop_remove_docker_container():
 def delete_priv_keys():
     "This cmd is applicable for all networks"
 
-    node_key_file = "{}/config/node_key.json".format(home_path_current())
-    priv_key_file = "{}/config/priv_validator_key.json".format(home_path_current())
-    priv_key_state_file = "{}/data/priv_validator_state.json".format(home_path_current())
+    node_key_file = "{}/config/node_key.json".format(home_path_CUR())
+    priv_key_file = "{}/config/priv_validator_key.json".format(home_path_CUR())
+    priv_key_state_file = "{}/data/priv_validator_state.json".format(home_path_CUR())
     cmd_value = ["rm -f {}; rm -f {}; rm -f {}".format(node_key_file, priv_key_file, priv_key_state_file)]
     return cmd_format(cmd_value, 'delete_priv_keys')
  
@@ -221,18 +221,18 @@ def force_recreate_docker_container(workspace):
 
     return "cd {} ; docker-compose pull && docker-compose up -d --force-recreate".format(workspace)
 
-def force_recreate_cur_docker_container():
+def force_recreate_docker_container_CUR():
     "This cmd is applicable only for orai"
     
     cmd_value = [force_recreate_docker_container(workspace_current())]
-    return cmd_format(cmd_value, 'force_recreate_cur_docker_container')
+    return cmd_format(cmd_value, 'force_recreate_docker_container_CUR')
 
 
-def force_recreate_new_docker_container():
+def force_recreate_docker_container_NEW():
     "This cmd is applicable only for orai"
     
     cmd_value = [force_recreate_docker_container(workspace_new())]
-    return cmd_format(cmd_value, 'force_recreate_new_docker_container')
+    return cmd_format(cmd_value, 'force_recreate_docker_container_NEW')
 
 
 def start_alert():
@@ -292,34 +292,34 @@ def restart_node():
     return cmd_format(cmd_value, 'restart_node')
 
     
-def restart_new_node():
+def restart_node_NEW():
     "This cmd is applicable for all networks "
     
     cmd_value = "" 
     if config.binary_node == 'oraid':
-        cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_new_docker_container', 'start_new_node']
+        cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_docker_container_NEW', 'start_node_NEW']
     else: 
-        cmd_value = ['set_home_binary_new', 'restart_node']
-    return cmd_format(cmd_value, 'restart_new_node')
+        cmd_value = ['set_home_binary_NEW', 'restart_node']
+    return cmd_format(cmd_value, 'restart_node_NEW')
 
 
-def restart_cur_node():
+def restart_node_CUR():
     "This cmd is applicable for all networks "
     
     if config.binary_node == 'oraid':
-        cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_cur_docker_container', 'start_cur_node']
+        cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_docker_container_CUR', 'start_node_CUR']
     else: 
-        cmd_value = ['set_home_binary_cur', 'restart_node']
-    return cmd_format(cmd_value, 'restart_cur_node')
+        cmd_value = ['set_home_binary_CUR', 'restart_node']
+    return cmd_format(cmd_value, 'restart_node_CUR')
 
 
 def restart_node_without_signctrl_NEW():
     "This cmd is applicable for all networks"
     
     if config.binary_node == 'oraid':
-        cmd_value = ['config_node_without_signctrl_NEW', 'force_recreate_new_docker_container', 'start_new_node']
+        cmd_value = ['config_node_without_signctrl_NEW', 'force_recreate_docker_container_NEW', 'start_node_NEW']
     else: 
-        cmd_value = ['config_node_without_signctrl_NEW', 'restart_new_node']
+        cmd_value = ['config_node_without_signctrl_NEW', 'restart_node_NEW']
     return cmd_format(cmd_value, 'restart_node_without_signctrl_NEW')
 
 
@@ -327,9 +327,9 @@ def restart_node_without_signctrl_CUR():
     "This cmd is applicable for all networks"
     
     if config.binary_node == 'oraid':
-        cmd_value = ['config_node_without_signctrl_CUR', 'force_recreate_cur_docker_container', 'start_cur_node']
+        cmd_value = ['config_node_without_signctrl_CUR', 'force_recreate_docker_container_CUR', 'start_node_CUR']
     else: 
-        cmd_value = ['config_node_without_signctrl_CUR', 'restart_cur_node']
+        cmd_value = ['config_node_without_signctrl_CUR', 'restart_node_CUR']
     return cmd_format(cmd_value, 'restart_node_without_signctrl_CUR')
 
 
@@ -342,14 +342,14 @@ def priv_validator_laddr_config_reset(home_path):
 def priv_validator_laddr_config_reset_NEW():
     "This cmd is applicable for all networks"
     
-    cmd_value = priv_validator_laddr_config_reset(home_path_new())
+    cmd_value = priv_validator_laddr_config_reset(home_path_NEW())
     return cmd_format(cmd_value, 'priv_validator_laddr_config_reset_NEW')  
  
 
 def priv_validator_laddr_config_reset_CUR():
     "This cmd is applicable for all networks"
     
-    cmd_value = priv_validator_laddr_config_reset(home_path_current())
+    cmd_value = priv_validator_laddr_config_reset(home_path_CUR())
     return cmd_format(cmd_value, 'priv_validator_laddr_config_reset_CUR')
 
 
@@ -362,14 +362,14 @@ def priv_validator_laddr_config_signctrl(home_path):
 def priv_validator_laddr_config_signctrl_NEW():
     "This cmd is applicable for all networks"
     
-    cmd_value = priv_validator_laddr_config_signctrl(home_path_new())
+    cmd_value = priv_validator_laddr_config_signctrl(home_path_NEW())
     return cmd_format(cmd_value, 'priv_validator_laddr_config_signctrl_NEW')  
  
 
 def priv_validator_laddr_config_signctrl_CUR():
     "This cmd is applicable for all networks"
     
-    cmd_value = priv_validator_laddr_config_signctrl(home_path_current())
+    cmd_value = priv_validator_laddr_config_signctrl(home_path_CUR())
     return cmd_format(cmd_value, 'priv_validator_laddr_config_signctrl_CUR')
                                                                                                                        
 
@@ -382,14 +382,14 @@ def copy_priv_validator_key_to_home(home_path):
 def copy_priv_validator_key_to_home_NEW():
     "This cmd is applicable for all networks"
     
-    cmd_value = copy_priv_validator_key_to_home(home_path_new()) 
+    cmd_value = copy_priv_validator_key_to_home(home_path_NEW()) 
     return cmd_format(cmd_value, 'copy_priv_validator_key_to_home_NEW')   
 
 
 def copy_priv_validator_key_to_home_CUR():
     "This cmd is applicable for all networks"
     
-    cmd_value = copy_priv_validator_key_to_home(home_path_current()) 
+    cmd_value = copy_priv_validator_key_to_home(home_path_CUR()) 
     return cmd_format(cmd_value, 'copy_priv_validator_key_to_home_CUR') 
                                                                                                                        
 
@@ -413,18 +413,18 @@ def config_node_without_signctrl_CUR():
     return cmd_format(cmd_value, 'config_node_without_signctrl_CUR')
 
 
-def run_backup_and_restart_cur_node():
+def run_backup_and_restart_node_CUR():
     "This cmd is applicable for all networks"
 
-    cmd_value = ['run_backup_delete_local_copy', 'restart_cur_node']
-    return cmd_format(cmd_value, 'run_backup_and_restart_cur_node')
+    cmd_value = ['run_backup_delete_local_copy', 'restart_node_CUR']
+    return cmd_format(cmd_value, 'run_backup_and_restart_node_CUR')
 
         
-def run_backup_and_restart_new_node():
+def run_backup_and_restart_node_NEW():
     "This cmd is applicable only for all network"
 
-    cmd_value = ['run_backup_keep_local_copy', 'restart_new_node']
-    return cmd_format(cmd_value, 'run_backup_and_restart_new_node')
+    cmd_value = ['run_backup_keep_local_copy', 'restart_node_NEW']
+    return cmd_format(cmd_value, 'run_backup_and_restart_node_NEW')
 
 
 def list_repository_files():
@@ -473,7 +473,7 @@ def display_cmd_value(cmd):
     return '; '.join(cmd_value)
 
     
-CMD_KEY_INVARIANT = [ 'EXIT', 'delete_repo_file', 's3_download', 'run_backup_and_restart_cur_node', 'run_backup_and_restart_new_node',
+CMD_KEY_INVARIANT = [ 'EXIT', 'delete_repo_file', 's3_download', 'run_backup_and_restart_node_CUR', 'run_backup_and_restart_node_NEW',
                  'run_backup_keep_local_copy', 'run_backup_delete_local_copy', 'delete_signctrl_state',
                  'start_signctrl', 'stop_signctrl', 'start_alert',
                  'stop_alert', 'config_node_without_signctrl_NEW', 'config_node_without_signctrl_CUR',
@@ -485,7 +485,7 @@ def get_CMD_MAP():
     
     # common key
     cmd_keys = CMD_KEY_INVARIANT + ['stop_node', 'stop_node', 'delete_signctrl_state', 
-                                    'delete_priv_keys', 'restart_new_node', 'restart_cur_node', 
+                                    'delete_priv_keys', 'restart_node_NEW', 'restart_node_CUR', 
                                     'list_repository_files', 'delete_repo_outdated_files',
                                     'backup_script_and_keep_local_copy', 'backup_script_and_delete_local_copy',
                                     'backup_script', 'unzip_backup_file', 'priv_validator_laddr_config_reset_NEW',
@@ -496,15 +496,15 @@ def get_CMD_MAP():
 
     # network specific key
     if config.binary_node == 'oraid':
-        cmd_keys = cmd_keys + ['start_cur_node', 'start_new_node', 'remove_docker_container',
-                     'force_recreate_cur_docker_container', 'force_recreate_new_docker_container']
+        cmd_keys = cmd_keys + ['start_node_CUR', 'start_node_NEW', 'remove_docker_container',
+                     'force_recreate_docker_container_CUR', 'force_recreate_docker_container_NEW']
     
     else:
-        cmd_keys = cmd_keys + ['start_node', 'set_home_binary_systemd_file_new',
-                               'set_home_binary_profile_file_new',
-                               'set_home_binary_new', 'set_home_binary_systemd_file_cur',
-                               'set_home_binary_profile_file_cur',
-                               'set_home_binary_cur','restart_node'
+        cmd_keys = cmd_keys + ['start_node', 'set_home_binary_systemd_file_NEW',
+                               'set_home_binary_profile_file_NEW',
+                               'set_home_binary_NEW', 'set_home_binary_systemd_file_CUR',
+                               'set_home_binary_profile_file_CUR',
+                               'set_home_binary_CUR','restart_node'
                                ]
         
 
