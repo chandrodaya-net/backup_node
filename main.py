@@ -313,6 +313,106 @@ def restart_cur_node():
     return cmd_format(cmd_value, 'restart_cur_node')
 
 
+def restart_node_without_signctrl_NEW():
+    "This cmd is applicable for all networks"
+    
+    if config.binary_node == 'oraid':
+        cmd_value = ['config_node_without_signctrl_NEW', 'force_recreate_new_docker_container', 'start_new_node']
+    else: 
+        cmd_value = ['config_node_without_signctrl_NEW', 'restart_new_node']
+    return cmd_format(cmd_value, 'restart_node_without_signctrl_NEW')
+
+
+def restart_node_without_signctrl_CUR():
+    "This cmd is applicable for all networks"
+    
+    if config.binary_node == 'oraid':
+        cmd_value = ['config_node_without_signctrl_CUR', 'force_recreate_cur_docker_container', 'start_cur_node']
+    else: 
+        cmd_value = ['config_node_without_signctrl_CUR', 'restart_cur_node']
+    return cmd_format(cmd_value, 'restart_node_without_signctrl_CUR')
+
+
+def priv_validator_laddr_config_reset(home_path):
+    "This cmd is applicable for all networks"
+    
+    return ["""sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" {home_path}/config/config.toml""".format(home_path=home_path)]
+  
+
+def priv_validator_laddr_config_reset_NEW():
+    "This cmd is applicable for all networks"
+    
+    cmd_value = priv_validator_laddr_config_reset(home_path_new())
+    return cmd_format(cmd_value, 'priv_validator_laddr_config_reset_NEW')  
+ 
+
+def priv_validator_laddr_config_reset_CUR():
+    "This cmd is applicable for all networks"
+    
+    cmd_value = priv_validator_laddr_config_reset(home_path_current())
+    return cmd_format(cmd_value, 'priv_validator_laddr_config_reset_CUR')
+
+
+def priv_validator_laddr_config_signctrl(home_path):
+    "This cmd is applicable for all networks"
+    
+    return ["""sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" {home_path}/config/config.toml""".format(home_path=home_path)]
+
+
+def priv_validator_laddr_config_signctrl_NEW():
+    "This cmd is applicable for all networks"
+    
+    cmd_value = priv_validator_laddr_config_signctrl(home_path_new())
+    return cmd_format(cmd_value, 'priv_validator_laddr_config_signctrl_NEW')  
+ 
+
+def priv_validator_laddr_config_signctrl_CUR():
+    "This cmd is applicable for all networks"
+    
+    cmd_value = priv_validator_laddr_config_signctrl(home_path_current())
+    return cmd_format(cmd_value, 'priv_validator_laddr_config_signctrl_CUR')
+                                                                                                                       
+
+def copy_priv_validator_key_to_home(home_path):
+    "This cmd is applicable for all networks"
+    
+    return ["cp /home/signer/.signctrl/priv_validator_key.json {home_path}/config/; cp /home/signer/.signctrl/priv_validator_state.json {home_path}/data/".format(home_path=home_path)]
+    
+                                                                                                                           
+def copy_priv_validator_key_to_home_NEW():
+    "This cmd is applicable for all networks"
+    
+    cmd_value = copy_priv_validator_key_to_home(home_path_new()) 
+    return cmd_format(cmd_value, 'copy_priv_validator_key_to_home_NEW')   
+
+
+def copy_priv_validator_key_to_home_CUR():
+    "This cmd is applicable for all networks"
+    
+    cmd_value = copy_priv_validator_key_to_home(home_path_current()) 
+    return cmd_format(cmd_value, 'copy_priv_validator_key_to_home_CUR') 
+                                                                                                                       
+
+def config_node_without_signctrl_NEW():
+    """This cmd is applicable for all networks.
+       - Move private keys from /home/signer/.signctrl to new validator home (e.g /mn/volumne_new/workspace/.noded)
+       - update the config.toml and set priv_validator_laddr = ""
+    """
+    
+    cmd_value = ["priv_validator_laddr_config_reset_NEW", "copy_priv_validator_key_to_home_NEW"]
+    return cmd_format(cmd_value, 'config_node_without_signctrl_NEW')
+
+
+def config_node_without_signctrl_CUR():
+    """This cmd is applicable for all networks.
+       - Move private keys from /home/signer/.signctrl to new validator home (e.g /mn/volumne_cur/workspace/.noded)
+       - update the config.toml and set priv_validator_laddr = ""
+    """
+    
+    cmd_value = ["priv_validator_laddr_config_reset_CUR", "copy_priv_validator_key_to_home_CUR"]
+    return cmd_format(cmd_value, 'config_node_without_signctrl_CUR')
+
+
 def run_backup_and_restart_cur_node():
     "This cmd is applicable for all networks"
 
@@ -376,7 +476,8 @@ def display_cmd_value(cmd):
 CMD_KEY_INVARIANT = [ 'EXIT', 'delete_repo_file', 's3_download', 'run_backup_and_restart_cur_node', 'run_backup_and_restart_new_node',
                  'run_backup_keep_local_copy', 'run_backup_delete_local_copy', 'delete_signctrl_state',
                  'start_signctrl', 'stop_signctrl', 'start_alert',
-                 'stop_alert', 
+                 'stop_alert', 'config_node_without_signctrl_NEW', 'config_node_without_signctrl_CUR',
+                 'restart_node_without_signctrl_NEW', 'restart_node_without_signctrl_CUR'
     ]    
 def get_CMD_MAP(): 
     
@@ -385,9 +486,12 @@ def get_CMD_MAP():
     # common key
     cmd_keys = CMD_KEY_INVARIANT + ['stop_node', 'stop_node', 'delete_signctrl_state', 
                                     'delete_priv_keys', 'restart_new_node', 'restart_cur_node', 
-                                     'list_repository_files', 'delete_repo_outdated_files',
-                                     'backup_script_and_keep_local_copy', 'backup_script_and_delete_local_copy',
-                                     'backup_script', 'unzip_backup_file'
+                                    'list_repository_files', 'delete_repo_outdated_files',
+                                    'backup_script_and_keep_local_copy', 'backup_script_and_delete_local_copy',
+                                    'backup_script', 'unzip_backup_file', 'priv_validator_laddr_config_reset_NEW',
+                                    'priv_validator_laddr_config_reset_CUR', 'priv_validator_laddr_config_signctrl_NEW',
+                                    'priv_validator_laddr_config_signctrl_CUR', 'copy_priv_validator_key_to_home_NEW', 
+                                    'copy_priv_validator_key_to_home_CUR'
                 ]
 
     # network specific key
@@ -462,6 +566,13 @@ def repl():
             cleanup = input()
             cmd = backup_script(cleanup)
             exec_shell_cmd(cmd['key'])
+        elif cmd_key in ['config_node_without_signctrl_NEW', 'config_node_without_signctrl_CUR', 'restart_node_without_signctrl_NEW', 'restart_node_without_signctrl_CUR']:
+            print("The above cmd is dangerous. It may cause double signing. Are you sure, you want to continue? (yes/no):")
+            yes_or_no = input()
+            if yes_or_no == 'yes':
+                exec_shell_recursive_cmd(cmd_key)
+            else:
+                print('abort cmd!')
         elif cmd_key == 'delete_repo_file':
             print("ENTER file_name:")
             file_name = input()

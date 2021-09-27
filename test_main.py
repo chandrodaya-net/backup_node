@@ -49,7 +49,10 @@ class TestCommon(unittest.TestCase):
                              's3_download': 'cd /mnt/volume_fra1_02; s3cmd get s3://chandrodaya/source_file? source_file? ; tar -xzvf source_file? ; rm source_file?',                   
                              'delete_repo_file': 's3cmd rm  s3://chandrodaya/file_name?',
                             'EXIT': 'Exit from the program', 
-                           
+                            'config_node_without_signctrl_NEW': 'priv_validator_laddr_config_reset_NEW; copy_priv_validator_key_to_home_NEW',
+                            'config_node_without_signctrl_CUR': 'priv_validator_laddr_config_reset_CUR; copy_priv_validator_key_to_home_CUR', 
+                            'restart_node_without_signctrl_NEW': 'config_node_without_signctrl_NEW; restart_new_node', 
+                            'restart_node_without_signctrl_CUR': 'config_node_without_signctrl_CUR; restart_cur_node',
                            }
         
         actual_CMD_MAP = main.get_CMD_MAP()
@@ -84,6 +87,12 @@ class TestMainJuno(unittest.TestCase):
                             'restart_node': 'delete_signctrl_state; start_signctrl; start_node',
                             'restart_new_node': 'set_home_binary_new; restart_node',
                             'restart_cur_node': 'set_home_binary_cur; restart_node',
+                            'copy_priv_validator_key_to_home_NEW': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_02/workspace/.juno/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_02/workspace/.juno/data/', 
+                            'copy_priv_validator_key_to_home_CUR': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_01/workspace/.juno/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_01/workspace/.juno/data/',
+                            'priv_validator_laddr_config_reset_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_02/workspace/.juno/config/config.toml',
+                            'priv_validator_laddr_config_reset_CUR':'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_01/workspace/.juno/config/config.toml', 
+                            'priv_validator_laddr_config_signctrl_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" /mnt/volume_fra1_02/workspace/.juno/config/config.toml', 
+                            'priv_validator_laddr_config_signctrl_CUR': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" /mnt/volume_fra1_01/workspace/.juno/config/config.toml',
                             'delete_priv_keys': 'rm -f /mnt/volume_fra1_01/workspace/.juno/config/node_key.json; rm -f /mnt/volume_fra1_01/workspace/.juno/config/priv_validator_key.json; rm -f /mnt/volume_fra1_01/workspace/.juno/data/priv_validator_state.json' ,
                             'backup_script': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/junod cleanup?', 
                             'backup_script_and_keep_local_copy': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/junod false', 
@@ -129,6 +138,12 @@ class TestMainOrai(unittest.TestCase):
                             'start_cur_node': "cd /mnt/volume_fra1_01/workspace; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'",
                             'restart_new_node': 'delete_signctrl_state; start_signctrl; force_recreate_new_docker_container; start_new_node',
                             'restart_cur_node': 'delete_signctrl_state; start_signctrl; force_recreate_cur_docker_container; start_cur_node',
+                            'copy_priv_validator_key_to_home_NEW': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_02/workspace/.oraid/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_02/workspace/.oraid/data/',
+                            'copy_priv_validator_key_to_home_CUR': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_01/workspace/.oraid/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_01/workspace/.oraid/data/',
+                            'priv_validator_laddr_config_reset_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_02/workspace/.oraid/config/config.toml',
+                            'priv_validator_laddr_config_reset_CUR': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_01/workspace/.oraid/config/config.toml', 
+                            'priv_validator_laddr_config_signctrl_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" /mnt/volume_fra1_02/workspace/.oraid/config/config.toml', 
+                            'priv_validator_laddr_config_signctrl_CUR': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" /mnt/volume_fra1_01/workspace/.oraid/config/config.toml',
                             'stop_node': 'docker stop orai_node ; sleep 1s; docker rm orai_node; sleep 1s',
                             'remove_docker_container': 'docker rm orai_node',
                             'force_recreate_new_docker_container': 'cd /mnt/volume_fra1_02/workspace ; docker-compose pull && docker-compose up -d --force-recreate',
