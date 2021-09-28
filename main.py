@@ -9,7 +9,6 @@ import traceback
  
 logger = create_logger(config.log_file_path, __name__ , config.log_level, True)
 
-
 def check():
     if config.binary_node != 'oraid':
         raise Exception("This comd is only applicapble for orai network!")
@@ -71,11 +70,13 @@ def backup_script(cleanup="cleanup?"):
                                                            cleanup=cleanup)]
     return cmd_format(cmd_value, 'backup_script') 
 
+
 def backup_script_and_delete_local_copy():
     """ run the backup scrip to upload source to digital ocean and 
         delete the local copy in the new volume.
     """
     return backup_script(cleanup="true")
+
 
 def backup_script_and_keep_local_copy():
     """ run the backup scrip to upload source to digital ocean and 
@@ -101,6 +102,7 @@ def escape_slash(name):
 
 def cmd_format(cmd_value, cmd_name):
     return {'key': cmd_value, 'name': cmd_name.upper()}
+
 
 def set_home_binary_systemd_file(home_path):
     "this cmd is applicable only for juno"
@@ -200,6 +202,7 @@ def stop_remove_docker_container():
     cmd_value = ["docker stop orai_node ; docker rm orai_node; sleep 2s"]
     return cmd_format(cmd_value, 'stop_remove_docker_container')
 
+
 def delete_priv_keys():
     "This cmd is applicable for all networks"
 
@@ -208,6 +211,7 @@ def delete_priv_keys():
     priv_key_state_file = "{}/data/priv_validator_state.json".format(home_path_CUR())
     cmd_value = ["rm -f {}; rm -f {}; rm -f {}".format(node_key_file, priv_key_file, priv_key_state_file)]
     return cmd_format(cmd_value, 'delete_priv_keys')
+
  
 def remove_docker_container():
     "This cmd is applicable only for orai"
@@ -220,6 +224,7 @@ def force_recreate_docker_container(workspace):
     "This cmd is applicable only for orai"
 
     return "cd {} ; docker-compose pull && docker-compose up -d --force-recreate".format(workspace)
+
 
 def force_recreate_docker_container_CUR():
     "This cmd is applicable only for orai"
@@ -275,6 +280,7 @@ def run_backup_delete_local_copy():
 
     cmd_value = ['stop_node', 'stop_signctrl', 'delete_priv_keys', 'backup_script_and_delete_local_copy', 'delete_repo_outdated_files']
     return cmd_format(cmd_value, 'run_backup')
+
 
 def run_backup_keep_local_copy():
     """This cmd is applicable only for all networks. 
@@ -332,6 +338,7 @@ def restart_sentry_node_CUR():
     else: 
         cmd_value = ['set_home_binary_CUR', 'start_node']
     return cmd_format(cmd_value, 'restart_sentry_node_CUR')
+
 
 def restart_node_without_signctrl_NEW():
     "This cmd is applicable for all networks"
@@ -512,8 +519,9 @@ CMD_KEY_INVARIANT = [ 'EXIT', 'delete_repo_file', 's3_download', 'run_backup_and
                  'start_signctrl', 'stop_signctrl', 'start_alert',
                  'stop_alert', 'config_node_without_signctrl_NEW', 'config_node_without_signctrl_CUR',
                  'restart_node_without_signctrl_NEW', 'restart_node_without_signctrl_CUR',
-                 'run_backup_and_restart_sentry_node_CUR', 'run_backup_and_restart_sentry_node_NEW'
-    ]    
+                 'run_backup_and_restart_sentry_node_CUR', 'run_backup_and_restart_sentry_node_NEW']
+
+    
 def get_CMD_MAP(): 
     
     CMD_MAP = {}
@@ -578,6 +586,7 @@ def exec_shell_cmd(cmd):
         logger.error("\n\n********** EXEC FAIL! {}*********".format(exc.stdout.decode()))
         return (exc.returncode) 
 
+
 def repl():
     while True:
         logger.info("\n********** START CMD: version={}***************\n".format(version.number))
@@ -627,7 +636,6 @@ def send_msg_to_telegram(msg):
 
        
 if __name__ == "__main__":    
-        
     nr_args = len(sys.argv)
     if nr_args == 1:
         repl()
@@ -641,11 +649,3 @@ if __name__ == "__main__":
             send_msg_to_telegram(msg)
     else:
         logger.error('Too many arguments!')
-    
-    
-
-
-  
-    
-    
-    
