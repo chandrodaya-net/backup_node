@@ -15,13 +15,13 @@ def check():
         raise Exception("This comd is only applicapble for orai network!")
     
 
-def workspace_current():
+def workspace_CUR():
     "Directory where we currently store the blockchain data folder"
     
     return  "{}/workspace".format(config.volume_current)
 
 
-def workspace_new():
+def workspace_NEW():
     "irectory where we plan to store going forward the blockchain data folder"
     
     return  "{}/workspace".format(config.volume_new)
@@ -30,7 +30,7 @@ def workspace_new():
 def full_path_source_data():
     "The full path to the folder to backup. Argument for the backup_script.sh"
     
-    return workspace_current()
+    return workspace_CUR()
 
 
 def modifier_binary_name():
@@ -47,13 +47,13 @@ def full_path_backup_name():
 def home_path_CUR():
     "Path to the current blockchain datafolder"
     
-    return "{}/.{}".format(workspace_current(), modifier_binary_name())
+    return "{}/.{}".format(workspace_CUR(), modifier_binary_name())
 
 
 def home_path_NEW():
     "Path to the new blockchain datafolder"
     
-    return "{}/.{}".format(workspace_new(), modifier_binary_name())
+    return "{}/.{}".format(workspace_NEW(), modifier_binary_name())
 
 
 def backup_script(cleanup="cleanup?"):
@@ -171,14 +171,14 @@ def _start_node(workspace):
 def start_node_CUR():
     "this cmd is applicable only for orai"
     
-    cmd_value = [_start_node(workspace_current())]
+    cmd_value = [_start_node(workspace_CUR())]
     return cmd_format(cmd_value, 'start_node_CUR')
 
     
 def start_node_NEW():
     "this cmd is applicable only for orai"
 
-    cmd_value = [_start_node(workspace_new())]
+    cmd_value = [_start_node(workspace_NEW())]
     return cmd_format(cmd_value, 'start_node_NEW')
 
 
@@ -224,14 +224,14 @@ def force_recreate_docker_container(workspace):
 def force_recreate_docker_container_CUR():
     "This cmd is applicable only for orai"
     
-    cmd_value = [force_recreate_docker_container(workspace_current())]
+    cmd_value = [force_recreate_docker_container(workspace_CUR())]
     return cmd_format(cmd_value, 'force_recreate_docker_container_CUR')
 
 
 def force_recreate_docker_container_NEW():
     "This cmd is applicable only for orai"
     
-    cmd_value = [force_recreate_docker_container(workspace_new())]
+    cmd_value = [force_recreate_docker_container(workspace_NEW())]
     return cmd_format(cmd_value, 'force_recreate_docker_container_NEW')
 
 
@@ -312,6 +312,26 @@ def restart_node_CUR():
         cmd_value = ['set_home_binary_CUR', 'restart_node']
     return cmd_format(cmd_value, 'restart_node_CUR')
 
+
+def restart_sentry_node_NEW():
+    "This cmd is applicable for all networks "
+    
+    cmd_value = "" 
+    if config.binary_node == 'oraid':
+        cmd_value = ['force_recreate_docker_container_NEW', 'start_node_NEW']
+    else: 
+        cmd_value = ['set_home_binary_NEW', 'start_node']
+    return cmd_format(cmd_value, 'restart_node_NEW')
+
+
+def restart_sentry_node_CUR():
+    "This cmd is applicable for all networks "
+    
+    if config.binary_node == 'oraid':
+        cmd_value = ['force_recreate_docker_container_CUR', 'start_node_CUR']
+    else: 
+        cmd_value = ['set_home_binary_CUR', 'start_node']
+    return cmd_format(cmd_value, 'restart_sentry_node_CUR')
 
 def restart_node_without_signctrl_NEW():
     "This cmd is applicable for all networks"
@@ -427,6 +447,20 @@ def run_backup_and_restart_node_NEW():
     return cmd_format(cmd_value, 'run_backup_and_restart_node_NEW')
 
 
+def run_backup_and_restart_sentry_node_CUR():
+    "This cmd is applicable for all networks"
+
+    cmd_value = ['run_backup_delete_local_copy', 'restart_sentry_node_CUR']
+    return cmd_format(cmd_value, 'run_backup_and_restart_sentry_node_CUR')
+
+        
+def run_backup_and_restart_sentry_node_NEW():
+    "This cmd is applicable only for all network"
+
+    cmd_value = ['run_backup_keep_local_copy', 'restart_sentry_node_NEW']
+    return cmd_format(cmd_value, 'run_backup_and_restart_sentry_node_NEW')
+
+
 def list_repository_files():
     cmd_value = ["s3cmd ls s3://{space}/{binary}*".format(space=config.digital_ocean_space, binary=config.binary_node)]
     return cmd_format(cmd_value, 'list_repository_files')
@@ -477,7 +511,8 @@ CMD_KEY_INVARIANT = [ 'EXIT', 'delete_repo_file', 's3_download', 'run_backup_and
                  'run_backup_keep_local_copy', 'run_backup_delete_local_copy', 'delete_signctrl_state',
                  'start_signctrl', 'stop_signctrl', 'start_alert',
                  'stop_alert', 'config_node_without_signctrl_NEW', 'config_node_without_signctrl_CUR',
-                 'restart_node_without_signctrl_NEW', 'restart_node_without_signctrl_CUR'
+                 'restart_node_without_signctrl_NEW', 'restart_node_without_signctrl_CUR',
+                 'run_backup_and_restart_sentry_node_CUR', 'run_backup_and_restart_sentry_node_NEW'
     ]    
 def get_CMD_MAP(): 
     
@@ -486,6 +521,7 @@ def get_CMD_MAP():
     # common key
     cmd_keys = CMD_KEY_INVARIANT + ['stop_node', 'stop_node', 'delete_signctrl_state', 
                                     'delete_priv_keys', 'restart_node_NEW', 'restart_node_CUR', 
+                                    'restart_sentry_node_NEW', 'restart_sentry_node_CUR',
                                     'list_repository_files', 'delete_repo_outdated_files',
                                     'backup_script_and_keep_local_copy', 'backup_script_and_delete_local_copy',
                                     'backup_script', 'unzip_backup_file', 'priv_validator_laddr_config_reset_NEW',

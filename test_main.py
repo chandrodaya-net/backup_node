@@ -3,13 +3,13 @@ import config
 import main
 
 class TestCommon(unittest.TestCase):
-    def test_workspace_current(self):
+    def test_workspace_CUR(self):
         expected_cmd = '/mnt/volume_fra1_01/workspace'
-        self.assertEqual(main.workspace_current(), expected_cmd)
+        self.assertEqual(main.workspace_CUR(), expected_cmd)
 
-    def test_workspace_new(self):
+    def test_workspace_NEW(self):
         expected_cmd = '/mnt/volume_fra1_02/workspace'
-        self.assertEqual(main.workspace_new(), expected_cmd)
+        self.assertEqual(main.workspace_NEW(), expected_cmd)
     
     def test_full_path_source_data(self):
         expected_cmd = '/mnt/volume_fra1_01/workspace'
@@ -46,6 +46,8 @@ class TestCommon(unittest.TestCase):
                             'run_backup_delete_local_copy': 'stop_node; stop_signctrl; delete_priv_keys; backup_script_and_delete_local_copy; delete_repo_outdated_files',
                             'run_backup_and_restart_node_CUR': 'run_backup_delete_local_copy; restart_node_CUR',
                             'run_backup_and_restart_node_NEW': 'run_backup_keep_local_copy; restart_node_NEW',
+                            'run_backup_and_restart_sentry_node_CUR': 'run_backup_delete_local_copy; restart_sentry_node_CUR',
+                            'run_backup_and_restart_sentry_node_NEW': 'run_backup_keep_local_copy; restart_sentry_node_NEW',
                              's3_download': 'cd /mnt/volume_fra1_02; s3cmd get s3://chandrodaya/source_file? source_file? ; tar -xzvf source_file? ; rm source_file?',                   
                              'delete_repo_file': 's3cmd rm  s3://chandrodaya/file_name?',
                             'EXIT': 'Exit from the program', 
@@ -87,6 +89,8 @@ class TestMainJuno(unittest.TestCase):
                             'restart_node': 'delete_signctrl_state; start_signctrl; start_node',
                             'restart_node_NEW': 'set_home_binary_NEW; restart_node',
                             'restart_node_CUR': 'set_home_binary_CUR; restart_node',
+                            'restart_sentry_node_CUR': 'set_home_binary_CUR; start_node',
+                            'restart_sentry_node_NEW': 'set_home_binary_NEW; start_node', 
                             'copy_priv_validator_key_to_home_NEW': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_02/workspace/.juno/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_02/workspace/.juno/data/', 
                             'copy_priv_validator_key_to_home_CUR': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_01/workspace/.juno/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_01/workspace/.juno/data/',
                             'priv_validator_laddr_config_reset_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_02/workspace/.juno/config/config.toml',
@@ -138,6 +142,8 @@ class TestMainOrai(unittest.TestCase):
                             'start_node_CUR': "cd /mnt/volume_fra1_01/workspace; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'",
                             'restart_node_NEW': 'delete_signctrl_state; start_signctrl; force_recreate_docker_container_NEW; start_node_NEW',
                             'restart_node_CUR': 'delete_signctrl_state; start_signctrl; force_recreate_docker_container_CUR; start_node_CUR',
+                            'restart_sentry_node_CUR': 'force_recreate_docker_container_CUR; start_node_CUR', 
+                            'restart_sentry_node_NEW': 'force_recreate_docker_container_NEW; start_node_NEW', 
                             'copy_priv_validator_key_to_home_NEW': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_02/workspace/.oraid/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_02/workspace/.oraid/data/',
                             'copy_priv_validator_key_to_home_CUR': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_01/workspace/.oraid/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_01/workspace/.oraid/data/',
                             'priv_validator_laddr_config_reset_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_02/workspace/.oraid/config/config.toml',
