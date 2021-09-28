@@ -568,7 +568,11 @@ def exec_shell_recursive_cmd(cmd_key):
             return 1 
     else:
         for _cmd_key in cmd['key']:
-            exec_shell_recursive_cmd(_cmd_key) 
+            result = exec_shell_recursive_cmd(_cmd_key)
+            if result != 0 :
+                logger.info("************** {} FAILED! ***********************".format(cmd['name']))
+                return 1
+             
     logger.info("************** END {} ***********************".format(cmd['name']))
     return 0
 
