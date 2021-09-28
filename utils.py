@@ -39,3 +39,11 @@ def create_logger(file: str, name: str, level: str, rotating: bool = False):
     logger.addHandler(handler_stdout)
 
     return logger
+
+def pretty_print(dictionary, indent=''):
+    # ANSI color terminal escape sequences
+    bold='\033[01m'
+    OKGREEN = '\033[92m'
+    ENDC = '\033[0m'
+    for key in  dictionary.keys():
+        print ('{}  {}{}"{}"{}: {}'.format(indent, bold, OKGREEN, key, ENDC, dictionary[key]))

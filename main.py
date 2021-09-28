@@ -1,5 +1,5 @@
 import subprocess
-from utils import create_logger
+from utils import create_logger, pretty_print
 import config
 import json
 import version
@@ -581,9 +581,7 @@ def exec_shell_cmd(cmd):
 def repl():
     while True:
         logger.info("\n********** START CMD: version={}***************\n".format(version.number))
-        
-        print(json.dumps(get_CMD_MAP(), sort_keys=False, indent=4))
-       
+        pretty_print(get_CMD_MAP())
         print("\nENTER A CMD_KEY:")
          
         cmd_key = input()
@@ -626,8 +624,10 @@ def send_msg_to_telegram(msg):
     except Exception:
         error_msg = traceback.format_exc()
         logger.error(error_msg)
-        
+
+       
 if __name__ == "__main__":    
+        
     nr_args = len(sys.argv)
     if nr_args == 1:
         repl()
