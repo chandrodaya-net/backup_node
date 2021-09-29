@@ -108,7 +108,7 @@ def set_home_binary_systemd_file(home_path):
     "this cmd is applicable only for juno"
 
     HOME_PATH_NEW = escape_slash(home_path) 
-    HOME = 'HOME_' + config.binary_node.upper()
+    HOME = 'DAEMON_HOME'
     cmd_value = ["""sed -i "s/\\"{HOME}=*.*/\\"{HOME}={HOME_PATH_NEW}\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload""".format(HOME=HOME,
                                                                                                                                         HOME_PATH_NEW=HOME_PATH_NEW)]
     return cmd_format(cmd_value, 'start_node_CUR')
@@ -118,7 +118,7 @@ def set_home_binary_profile_file(home_path):
     "this cmd is applicable only for juno"
 
     HOME_PATH = escape_slash(home_path) 
-    HOME = 'HOME_' + config.binary_node.upper()
+    HOME = 'DAEMON_HOME'
     # the cmd: "source . ~/.profile" does not work.
     # Therefore we have replaced it with an equivalent one: ". ~/.profile"
     cmd_value = ["""sed -i "s/{HOME}=*.*/{HOME}={HOME_PATH}/" ~/.profile ; . ~/.profile""".format(HOME=HOME,
@@ -559,6 +559,10 @@ def get_CMD_MAP():
 
 
 def exec_shell_recursive_cmd(cmd_key):
+    """ output: 1, 0
+            - 1: the execution of the cmd failed
+            - 0: the execution of the cmd passed
+    """
     cmd = globals()[cmd_key]()
     logger.info("************** START {} ***********************".format(cmd['name']))
     if len(cmd['key']) == 1 and  cmd['key'][0] not in list(get_CMD_MAP().keys()): 
@@ -572,7 +576,7 @@ def exec_shell_recursive_cmd(cmd_key):
             if result != 0 :
                 logger.info("************** {} FAILED! ***********************".format(cmd['name']))
                 return 1
-             
+
     logger.info("************** END {} ***********************".format(cmd['name']))
     return 0
 
