@@ -33,7 +33,7 @@ def full_path_source_data():
 
 
 def modifier_binary_name():
-    return config.binary_node[:-1] if config.binary_node == 'junod' else config.binary_node
+    return config.binary_node[:-1] if config.binary_node in['junod', 'umeed'] else config.binary_node
     
 
 def full_path_backup_name():
@@ -53,6 +53,19 @@ def home_path_NEW():
     "Path to the new blockchain datafolder"
     
     return "{}/.{}".format(workspace_NEW(), modifier_binary_name())
+
+def _create_home_path_symlink(home_path):
+    return "unlink /root/.{binary} ; ln -s {home_path}  /root/.{binary}".format(binary=modifier_binary_name(),
+                                                                                     home_path=home_path)
+    
+def create_home_path_symlink_CURR():
+    cmd_value = [_create_home_path_symlink(home_path_CUR())]
+    return cmd_format(cmd_value, 'create_home_path_symlink_CURR') 
+
+
+def create_home_path_symlink_NEW():
+    cmd_value = [_create_home_path_symlink(home_path_NEW())]
+    return cmd_format(cmd_value, 'create_home_path_symlink_CURR') 
 
 
 def backup_script(cleanup="cleanup?"):
@@ -104,62 +117,10 @@ def cmd_format(cmd_value, cmd_name):
     return {'key': cmd_value, 'name': cmd_name.upper()}
 
 
-def set_home_binary_systemd_file(home_path):
-    "this cmd is applicable only for juno"
-
-    HOME_PATH_NEW = escape_slash(home_path) 
-    HOME = 'DAEMON_HOME'
-    cmd_value = ["""sed -i "s/\\"{HOME}=*.*/\\"{HOME}={HOME_PATH_NEW}\\"/" /etc/systemd/system/junod.service; sudo systemctl daemon-reload""".format(HOME=HOME,
-                                                                                                                                        HOME_PATH_NEW=HOME_PATH_NEW)]
-    return cmd_format(cmd_value, 'start_node_CUR')
-
-
-def set_home_binary_profile_file(home_path):
-    "this cmd is applicable only for juno"
-
-    HOME_PATH = escape_slash(home_path) 
-    HOME = 'DAEMON_HOME'
-    # the cmd: "source . ~/.profile" does not work.
-    # Therefore we have replaced it with an equivalent one: ". ~/.profile"
-    cmd_value = ["""sed -i "s/{HOME}=*.*/{HOME}={HOME_PATH}/" ~/.profile ; . ~/.profile""".format(HOME=HOME,
-                                                                             HOME_PATH=HOME_PATH)]
-    return cmd_format(cmd_value, 'set_home_binary_profile_file_NEW') 
-
-
-def set_home_binary_systemd_file_NEW():
-    return set_home_binary_systemd_file(home_path_NEW())
-
-
-def set_home_binary_profile_file_NEW():
-    return set_home_binary_profile_file(home_path_NEW())
-    
-
-def set_home_binary_NEW():
-    "this cmd is applicable only for juno"
-    
-    cmd_value = ['set_home_binary_systemd_file_NEW', 'set_home_binary_profile_file_NEW']
-    return cmd_format(cmd_value, 'set_home_binary_NEW')
-
-
-def set_home_binary_systemd_file_CUR():
-    return set_home_binary_systemd_file(home_path_CUR())
-
-
-def set_home_binary_profile_file_CUR():
-    return set_home_binary_profile_file(home_path_CUR())
-
-
-def set_home_binary_CUR():
-    "this cmd is applicable only for juno"
-    
-    cmd_value = ['set_home_binary_systemd_file_CUR', 'set_home_binary_profile_file_CUR']
-    return cmd_format(cmd_value, 'set_home_binary_CUR')
-
-
 def start_node():
-    "this cmd is applicable only for juno"
-    
-    cmd_value = ["sudo systemctl start {}".format(config.binary_node)]
+    "this cmd is applicable to all the networks except orai"
+    node_name = 'cosmovisor' if config.binary_node == 'umeed' else config.binary_node
+    cmd_value = ["sudo systemctl start {}".format(node_name)]
     return cmd_format(cmd_value, 'start_node_CUR')
 
 
@@ -305,7 +266,7 @@ def restart_node_NEW():
     if config.binary_node == 'oraid':
         cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_docker_container_NEW', 'start_node_NEW']
     else: 
-        cmd_value = ['set_home_binary_NEW', 'restart_node']
+        cmd_value = ['create_home_path_symlink_NEW', 'restart_node']
     return cmd_format(cmd_value, 'restart_node_NEW')
 
 
@@ -315,7 +276,7 @@ def restart_node_CUR():
     if config.binary_node == 'oraid':
         cmd_value = ['delete_signctrl_state', 'start_signctrl', 'force_recreate_docker_container_CUR', 'start_node_CUR']
     else: 
-        cmd_value = ['set_home_binary_CUR', 'restart_node']
+        cmd_value = ['create_home_path_symlink_CURR', 'restart_node']
     return cmd_format(cmd_value, 'restart_node_CUR')
 
 
@@ -326,7 +287,7 @@ def restart_sentry_node_NEW():
     if config.binary_node == 'oraid':
         cmd_value = ['force_recreate_docker_container_NEW', 'start_node_NEW']
     else: 
-        cmd_value = ['set_home_binary_NEW', 'start_node']
+        cmd_value = ['create_home_path_symlink_NEW', 'start_node']
     return cmd_format(cmd_value, 'restart_node_NEW')
 
 
@@ -336,7 +297,7 @@ def restart_sentry_node_CUR():
     if config.binary_node == 'oraid':
         cmd_value = ['force_recreate_docker_container_CUR', 'start_node_CUR']
     else: 
-        cmd_value = ['set_home_binary_CUR', 'start_node']
+        cmd_value = ['create_home_path_symlink_CURR', 'start_node']
     return cmd_format(cmd_value, 'restart_sentry_node_CUR')
 
 
@@ -535,7 +496,7 @@ def get_CMD_MAP():
                                     'backup_script', 'unzip_backup_file', 'priv_validator_laddr_config_reset_NEW',
                                     'priv_validator_laddr_config_reset_CUR', 'priv_validator_laddr_config_signctrl_NEW',
                                     'priv_validator_laddr_config_signctrl_CUR', 'copy_priv_validator_key_to_home_NEW', 
-                                    'copy_priv_validator_key_to_home_CUR'
+                                    'copy_priv_validator_key_to_home_CUR', 
                 ]
 
     # network specific key
@@ -544,12 +505,8 @@ def get_CMD_MAP():
                      'force_recreate_docker_container_CUR', 'force_recreate_docker_container_NEW']
     
     else:
-        cmd_keys = cmd_keys + ['start_node', 'set_home_binary_systemd_file_NEW',
-                               'set_home_binary_profile_file_NEW',
-                               'set_home_binary_NEW', 'set_home_binary_systemd_file_CUR',
-                               'set_home_binary_profile_file_CUR',
-                               'set_home_binary_CUR','restart_node'
-                               ]
+        cmd_keys = cmd_keys + ['start_node', 'create_home_path_symlink_NEW', 'create_home_path_symlink_CURR',
+                               'restart_node']
         
 
     for cmd_key in cmd_keys:
