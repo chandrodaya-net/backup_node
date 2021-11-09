@@ -109,6 +109,17 @@ def s3_download(source_file='source_file?'):
     return cmd_format(cmd_value, 's3_download') 
     
 
+def s3_upload(source_tar_file='source_tar_file?', destination='destination?'):
+    """This cmd is applicable only for all networks.
+       It download source data file from the digital ocean space. 
+    """
+
+    cmd_value = ["cd {volume_new}; s3cmd put {src} s3://{space}".format(volume_new=config.volume_new,
+                                                                         space=config.digital_ocean_space,
+                                                                        src =source_tar_file)]
+    return cmd_format(cmd_value, 's3_upload') 
+
+
 def escape_slash(name):
     return name.replace("/", "\/")
 
@@ -119,7 +130,7 @@ def cmd_format(cmd_value, cmd_name):
 
 def start_node():
     "this cmd is applicable to all the networks except orai"
-    node_name = 'cosmovisor' if config.binary_node == 'umeed' else config.binary_node
+    node_name = 'cosmovisor' if config.binary_node in [ 'junod', 'umeed'] else config.binary_node
     cmd_value = ["sudo systemctl start {}".format(node_name)]
     return cmd_format(cmd_value, 'start_node_CUR')
 
@@ -152,7 +163,8 @@ def stop_node():
     if config.binary_node == 'oraid':
         cmd_value = ["docker stop orai_node ; sleep 1s; docker rm orai_node; sleep 1s"]
     else: 
-        cmd_value = ["sudo systemctl stop {}; sleep 2s".format(config.binary_node)]
+        node_name = 'cosmovisor' if config.binary_node in ['junod', 'umeed'] else config.binary_node 
+        cmd_value = ["sudo systemctl stop {}; sleep 2s".format(node_name)]
     return cmd_format(cmd_value, 'stop_node')
 
 
@@ -475,7 +487,7 @@ def display_cmd_value(cmd):
     return '; '.join(cmd_value)
 
     
-CMD_KEY_INVARIANT = [ 'EXIT', 'delete_repo_file', 's3_download', 'run_backup_and_restart_node_CUR', 'run_backup_and_restart_node_NEW',
+CMD_KEY_INVARIANT = [ 'EXIT', 'delete_repo_file', 's3_download', 's3_upload', 'run_backup_and_restart_node_CUR', 'run_backup_and_restart_node_NEW',
                  'run_backup_keep_local_copy', 'run_backup_delete_local_copy', 'delete_signctrl_state',
                  'start_signctrl', 'stop_signctrl', 'start_alert',
                  'stop_alert', 'config_node_without_signctrl_NEW', 'config_node_without_signctrl_CUR',
@@ -568,6 +580,11 @@ def repl():
             print("ENTER source_file:")
             source_file = input()
             cmd = s3_download(source_file)
+            exec_shell_cmd(cmd['key'])
+        elif cmd_key == 's3_upload':
+            print("ENTER source_tar_file:")
+            source_tar_file = input()
+            cmd = s3_upload(source_tar_file)
             exec_shell_cmd(cmd['key'])
         elif cmd_key == 'backup_script':
             print("ENTER cleanup (true/false):")

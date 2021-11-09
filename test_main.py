@@ -49,6 +49,7 @@ class TestCommon(unittest.TestCase):
                             'run_backup_and_restart_sentry_node_CUR': 'run_backup_delete_local_copy; restart_sentry_node_CUR',
                             'run_backup_and_restart_sentry_node_NEW': 'run_backup_keep_local_copy; restart_sentry_node_NEW',
                              's3_download': 'cd /mnt/volume_fra1_02; s3cmd get s3://chandrodaya/source_file? source_file? ; tar -xzvf source_file? ; rm source_file?',                   
+                             's3_upload': 'cd /mnt/volume_fra1_02; s3cmd put source_tar_file? s3://chandrodaya', 
                              'delete_repo_file': 's3cmd rm  s3://chandrodaya/file_name?',
                             'EXIT': 'Exit from the program', 
                             'config_node_without_signctrl_NEW': 'priv_validator_laddr_config_reset_NEW; copy_priv_validator_key_to_home_NEW',
@@ -84,8 +85,8 @@ class TestMainJuno(unittest.TestCase):
         self.assertEqual(main.home_path_NEW(), expected_cmd)
     
     def test_CMD_MAP(self):
-        expected_CMD_MAP = {'start_node': 'sudo systemctl start junod', 
-                            'stop_node': 'sudo systemctl stop junod; sleep 2s', 
+        expected_CMD_MAP = {'start_node': 'sudo systemctl start cosmovisor', 
+                            'stop_node': 'sudo systemctl stop cosmovisor; sleep 2s', 
                             'restart_node': 'delete_signctrl_state; start_signctrl; start_node',
                             'restart_node_NEW': 'create_home_path_symlink_NEW; restart_node',
                             'restart_node_CUR': 'create_home_path_symlink_CURR; restart_node',
@@ -106,6 +107,64 @@ class TestMainJuno(unittest.TestCase):
                             'create_home_path_symlink_NEW': 'unlink /root/.juno ; ln -s /mnt/volume_fra1_02/workspace/.juno  /root/.juno', 
                             'list_repository_files': 's3cmd ls s3://chandrodaya/junod*',
                             'delete_repo_outdated_files': """numberFiles=$(s3cmd ls s3://chandrodaya/junod* | wc -l) ; if (($numberFiles > 2 )); then s3cmd ls s3://chandrodaya/junod* | sort -r | tail -n $(expr $numberFiles - 2) | grep -E -o "s3://chandrodaya/.*" | while read file; do s3cmd rm $file; done; else echo "there are NO files to delete"; fi""",
+                            }
+        
+        actual_CMD_MAP = main.get_CMD_MAP()
+        for key in actual_CMD_MAP.keys():
+            if key not in main.CMD_KEY_INVARIANT:
+                self.assertEqual(actual_CMD_MAP[key], expected_CMD_MAP[key])
+        
+        for key in expected_CMD_MAP.keys():
+            if key not in actual_CMD_MAP.keys() and key not in main.CMD_KEY_INVARIANT:
+                print(key)
+                  
+        self.assertEqual(len(actual_CMD_MAP.keys()), len(main.CMD_KEY_INVARIANT) + len(expected_CMD_MAP.keys()))
+        
+        
+class TestMainUmee(unittest.TestCase):
+    
+    def setUp(self):
+        config.binary_node = "umeed"
+    
+    def test_modifier_binary_name(self):
+        expected_cmd = 'umee'
+        self.assertEqual(main.modifier_binary_name(), expected_cmd)
+        
+    def test_full_path_backup_name(self):
+        expected_cmd = '/mnt/volume_fra1_02/umeed'
+        self.assertEqual(main.full_path_backup_name(), expected_cmd)
+    
+    def test_home_path_CUR(self):
+        expected_cmd = '/mnt/volume_fra1_01/workspace/.umee'
+        self.assertEqual(main.home_path_CUR(), expected_cmd)
+    
+    def test_home_path_NEW(self):
+        expected_cmd = '/mnt/volume_fra1_02/workspace/.umee'
+        self.assertEqual(main.home_path_NEW(), expected_cmd)
+    
+    def test_CMD_MAP(self):
+        expected_CMD_MAP = {'start_node': 'sudo systemctl start cosmovisor', 
+                            'stop_node': 'sudo systemctl stop cosmovisor; sleep 2s', 
+                            'restart_node': 'delete_signctrl_state; start_signctrl; start_node',
+                            'restart_node_NEW': 'create_home_path_symlink_NEW; restart_node',
+                            'restart_node_CUR': 'create_home_path_symlink_CURR; restart_node',
+                            'restart_sentry_node_CUR': 'create_home_path_symlink_CURR; start_node',
+                            'restart_sentry_node_NEW': 'create_home_path_symlink_NEW; start_node', 
+                            'copy_priv_validator_key_to_home_NEW': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_02/workspace/.umee/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_02/workspace/.umee/data/', 
+                            'copy_priv_validator_key_to_home_CUR': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_01/workspace/.umee/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_01/workspace/.umee/data/',
+                            'priv_validator_laddr_config_reset_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_02/workspace/.umee/config/config.toml',
+                            'priv_validator_laddr_config_reset_CUR':'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_01/workspace/.umee/config/config.toml', 
+                            'priv_validator_laddr_config_signctrl_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" /mnt/volume_fra1_02/workspace/.umee/config/config.toml', 
+                            'priv_validator_laddr_config_signctrl_CUR': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" /mnt/volume_fra1_01/workspace/.umee/config/config.toml',
+                            'delete_priv_keys': 'rm -f /mnt/volume_fra1_01/workspace/.umee/config/node_key.json; rm -f /mnt/volume_fra1_01/workspace/.umee/config/priv_validator_key.json; rm -f /mnt/volume_fra1_01/workspace/.umee/data/priv_validator_state.json' ,
+                            'backup_script': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/umeed cleanup?', 
+                            'backup_script_and_keep_local_copy': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/umeed false', 
+                            'backup_script_and_delete_local_copy': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/umeed true',
+                            'unzip_backup_file': 'cd /mnt/volume_fra1_02; numberFiles=$(ls | wc -l); if (($numberFiles == 1 )); then fileName=`ls $umeed*.gz`; tar -xzvf $fileName ; rm $fileName  ; else echo "There are too many file to unzip or the folder is empty!" ;fi',
+                            'create_home_path_symlink_CURR': 'unlink /root/.umee ; ln -s /mnt/volume_fra1_01/workspace/.umee  /root/.umee', 
+                            'create_home_path_symlink_NEW': 'unlink /root/.umee ; ln -s /mnt/volume_fra1_02/workspace/.umee  /root/.umee', 
+                            'list_repository_files': 's3cmd ls s3://chandrodaya/umeed*',
+                            'delete_repo_outdated_files': """numberFiles=$(s3cmd ls s3://chandrodaya/umeed* | wc -l) ; if (($numberFiles > 2 )); then s3cmd ls s3://chandrodaya/umeed* | sort -r | tail -n $(expr $numberFiles - 2) | grep -E -o "s3://chandrodaya/.*" | while read file; do s3cmd rm $file; done; else echo "there are NO files to delete"; fi""",
                             }
         
         actual_CMD_MAP = main.get_CMD_MAP()
