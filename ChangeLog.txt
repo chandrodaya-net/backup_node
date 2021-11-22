@@ -44,4 +44,8 @@ v1.4.0 (27.09.2021)
 		- priv_validator_laddr_config_signctrl_CUR
 		- copy_priv_validator_key_to_home_NEW 
 		- copy_priv_validator_key_to_home_CUR
+
+v1.5.0 (22.11.2021)
+	- Remove signctrl cmds as we are using valink tool as signing coordination tool.
+	
 	

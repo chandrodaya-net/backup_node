@@ -15,18 +15,6 @@ class TestCommon(unittest.TestCase):
         expected_cmd = '/mnt/volume_fra1_01/workspace'
         self.assertEqual(main.full_path_source_data(), expected_cmd)
         
-    def test_start_signctrl(self):
-        expected_cmd = 'sudo systemctl start signctrl'
-        self.assertEqual(main.display_cmd_value('start_signctrl'), expected_cmd)
-    
-    def test_stop_signctrl(self):
-        expected_cmd = 'sudo systemctl stop signctrl'
-        self.assertEqual(main.display_cmd_value('stop_signctrl'), expected_cmd)
-    
-    def testdelete_signctrl_state(self):
-        expected_cmd = 'rm -f /home/signer/.signctrl/signctrl_state.json'
-        self.assertEqual(main.display_cmd_value('delete_signctrl_state'), expected_cmd)
-
     def test_start_alert(self):
         expected_cmd = 'sudo systemctl start indep_node_alarm'
         self.assertEqual(main.display_cmd_value('start_alert'), expected_cmd)
@@ -39,11 +27,8 @@ class TestCommon(unittest.TestCase):
         expected_CMD_MAP = {
                              'start_alert': 'sudo systemctl start indep_node_alarm', 
                             'stop_alert': 'sudo systemctl stop indep_node_alarm', 
-                            'start_signctrl': 'sudo systemctl start signctrl', 
-                            'stop_signctrl': 'sudo systemctl stop signctrl', 
-                             'delete_signctrl_state': 'rm -f /home/signer/.signctrl/signctrl_state.json',
-                            'run_backup_keep_local_copy': 'stop_node; stop_signctrl; delete_priv_keys; backup_script_and_keep_local_copy; unzip_backup_file; delete_repo_outdated_files', 
-                            'run_backup_delete_local_copy': 'stop_node; stop_signctrl; delete_priv_keys; backup_script_and_delete_local_copy; delete_repo_outdated_files',
+                            'run_backup_keep_local_copy': 'stop_node; delete_priv_keys; backup_script_and_keep_local_copy; unzip_backup_file; delete_repo_outdated_files', 
+                            'run_backup_delete_local_copy': 'stop_node; delete_priv_keys; backup_script_and_delete_local_copy; delete_repo_outdated_files',
                             'run_backup_and_restart_node_CUR': 'run_backup_delete_local_copy; restart_node_CUR',
                             'run_backup_and_restart_node_NEW': 'run_backup_keep_local_copy; restart_node_NEW',
                             'run_backup_and_restart_sentry_node_CUR': 'run_backup_delete_local_copy; restart_sentry_node_CUR',
@@ -51,11 +36,7 @@ class TestCommon(unittest.TestCase):
                              's3_download': 'cd /mnt/volume_fra1_02; s3cmd get s3://chandrodaya/source_file? source_file? ; tar -xzvf source_file? ; rm source_file?',                   
                              's3_upload': 'cd /mnt/volume_fra1_02; s3cmd put source_tar_file? s3://chandrodaya', 
                              'delete_repo_file': 's3cmd rm  s3://chandrodaya/file_name?',
-                            'EXIT': 'Exit from the program', 
-                            'config_node_without_signctrl_NEW': 'priv_validator_laddr_config_reset_NEW; copy_priv_validator_key_to_home_NEW',
-                            'config_node_without_signctrl_CUR': 'priv_validator_laddr_config_reset_CUR; copy_priv_validator_key_to_home_CUR', 
-                            'restart_node_without_signctrl_NEW': 'config_node_without_signctrl_NEW; restart_node_NEW', 
-                            'restart_node_without_signctrl_CUR': 'config_node_without_signctrl_CUR; restart_node_CUR',
+                            'EXIT': 'Exit from the program'                    
                            }
         
         actual_CMD_MAP = main.get_CMD_MAP()
@@ -87,17 +68,12 @@ class TestMainJuno(unittest.TestCase):
     def test_CMD_MAP(self):
         expected_CMD_MAP = {'start_node': 'sudo systemctl start cosmovisor', 
                             'stop_node': 'sudo systemctl stop cosmovisor; sleep 2s', 
-                            'restart_node': 'delete_signctrl_state; start_signctrl; start_node',
-                            'restart_node_NEW': 'create_home_path_symlink_NEW; restart_node',
-                            'restart_node_CUR': 'create_home_path_symlink_CURR; restart_node',
-                            'restart_sentry_node_CUR': 'create_home_path_symlink_CURR; start_node',
-                            'restart_sentry_node_NEW': 'create_home_path_symlink_NEW; start_node', 
-                            'copy_priv_validator_key_to_home_NEW': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_02/workspace/.juno/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_02/workspace/.juno/data/', 
-                            'copy_priv_validator_key_to_home_CUR': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_01/workspace/.juno/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_01/workspace/.juno/data/',
+                            'restart_node_NEW': 'create_home_path_symlink_NEW; start_node',
+                            'restart_node_CUR': 'create_home_path_symlink_CURR; start_node',
                             'priv_validator_laddr_config_reset_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_02/workspace/.juno/config/config.toml',
                             'priv_validator_laddr_config_reset_CUR':'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_01/workspace/.juno/config/config.toml', 
-                            'priv_validator_laddr_config_signctrl_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" /mnt/volume_fra1_02/workspace/.juno/config/config.toml', 
-                            'priv_validator_laddr_config_signctrl_CUR': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" /mnt/volume_fra1_01/workspace/.juno/config/config.toml',
+                            'priv_validator_laddr_config_valink_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/0.0.0.0:1235\\" /" /mnt/volume_fra1_02/workspace/.juno/config/config.toml', 
+                            'priv_validator_laddr_config_valink_CUR': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/0.0.0.0:1235\\" /" /mnt/volume_fra1_01/workspace/.juno/config/config.toml',
                             'delete_priv_keys': 'rm -f /mnt/volume_fra1_01/workspace/.juno/config/node_key.json; rm -f /mnt/volume_fra1_01/workspace/.juno/config/priv_validator_key.json; rm -f /mnt/volume_fra1_01/workspace/.juno/data/priv_validator_state.json' ,
                             'backup_script': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/junod cleanup?', 
                             'backup_script_and_keep_local_copy': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/junod false', 
@@ -145,17 +121,12 @@ class TestMainUmee(unittest.TestCase):
     def test_CMD_MAP(self):
         expected_CMD_MAP = {'start_node': 'sudo systemctl start cosmovisor', 
                             'stop_node': 'sudo systemctl stop cosmovisor; sleep 2s', 
-                            'restart_node': 'delete_signctrl_state; start_signctrl; start_node',
-                            'restart_node_NEW': 'create_home_path_symlink_NEW; restart_node',
-                            'restart_node_CUR': 'create_home_path_symlink_CURR; restart_node',
-                            'restart_sentry_node_CUR': 'create_home_path_symlink_CURR; start_node',
-                            'restart_sentry_node_NEW': 'create_home_path_symlink_NEW; start_node', 
-                            'copy_priv_validator_key_to_home_NEW': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_02/workspace/.umee/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_02/workspace/.umee/data/', 
-                            'copy_priv_validator_key_to_home_CUR': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_01/workspace/.umee/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_01/workspace/.umee/data/',
+                            'restart_node_NEW': 'create_home_path_symlink_NEW; start_node',
+                            'restart_node_CUR': 'create_home_path_symlink_CURR; start_node',
                             'priv_validator_laddr_config_reset_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_02/workspace/.umee/config/config.toml',
                             'priv_validator_laddr_config_reset_CUR':'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_01/workspace/.umee/config/config.toml', 
-                            'priv_validator_laddr_config_signctrl_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" /mnt/volume_fra1_02/workspace/.umee/config/config.toml', 
-                            'priv_validator_laddr_config_signctrl_CUR': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" /mnt/volume_fra1_01/workspace/.umee/config/config.toml',
+                            'priv_validator_laddr_config_valink_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/0.0.0.0:1235\\" /" /mnt/volume_fra1_02/workspace/.umee/config/config.toml', 
+                            'priv_validator_laddr_config_valink_CUR': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/0.0.0.0:1235\\" /" /mnt/volume_fra1_01/workspace/.umee/config/config.toml',
                             'delete_priv_keys': 'rm -f /mnt/volume_fra1_01/workspace/.umee/config/node_key.json; rm -f /mnt/volume_fra1_01/workspace/.umee/config/priv_validator_key.json; rm -f /mnt/volume_fra1_01/workspace/.umee/data/priv_validator_state.json' ,
                             'backup_script': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/umeed cleanup?', 
                             'backup_script_and_keep_local_copy': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/umeed false', 
@@ -195,16 +166,12 @@ class TestMainOrai(unittest.TestCase):
     def test_CMD_MAP(self):
         expected_CMD_MAP = {'start_node_NEW': "cd /mnt/volume_fra1_02/workspace; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'", 
                             'start_node_CUR': "cd /mnt/volume_fra1_01/workspace; docker-compose restart orai && docker-compose exec -d orai bash -c 'oraivisor start --p2p.pex false'",
-                            'restart_node_NEW': 'delete_signctrl_state; start_signctrl; force_recreate_docker_container_NEW; start_node_NEW',
-                            'restart_node_CUR': 'delete_signctrl_state; start_signctrl; force_recreate_docker_container_CUR; start_node_CUR',
-                            'restart_sentry_node_CUR': 'force_recreate_docker_container_CUR; start_node_CUR', 
-                            'restart_sentry_node_NEW': 'force_recreate_docker_container_NEW; start_node_NEW', 
-                            'copy_priv_validator_key_to_home_NEW': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_02/workspace/.oraid/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_02/workspace/.oraid/data/',
-                            'copy_priv_validator_key_to_home_CUR': 'cp /home/signer/.signctrl/priv_validator_key.json /mnt/volume_fra1_01/workspace/.oraid/config/; cp /home/signer/.signctrl/priv_validator_state.json /mnt/volume_fra1_01/workspace/.oraid/data/',
+                            'restart_node_NEW': 'force_recreate_docker_container_NEW; start_node_NEW',
+                            'restart_node_CUR': 'force_recreate_docker_container_CUR; start_node_CUR',
                             'priv_validator_laddr_config_reset_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_02/workspace/.oraid/config/config.toml',
                             'priv_validator_laddr_config_reset_CUR': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"\\" /" /mnt/volume_fra1_01/workspace/.oraid/config/config.toml', 
-                            'priv_validator_laddr_config_signctrl_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" /mnt/volume_fra1_02/workspace/.oraid/config/config.toml', 
-                            'priv_validator_laddr_config_signctrl_CUR': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/127.0.0.1:3000\\" /" /mnt/volume_fra1_01/workspace/.oraid/config/config.toml',
+                            'priv_validator_laddr_config_valink_NEW': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/0.0.0.0:1235\\" /" /mnt/volume_fra1_02/workspace/.oraid/config/config.toml', 
+                            'priv_validator_laddr_config_valink_CUR': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/0.0.0.0:1235\\" /" /mnt/volume_fra1_01/workspace/.oraid/config/config.toml',
                             'stop_node': 'docker stop orai_node ; sleep 1s; docker rm orai_node; sleep 1s',
                             'remove_docker_container': 'docker rm orai_node',
                             'force_recreate_docker_container_NEW': 'cd /mnt/volume_fra1_02/workspace ; docker-compose pull && docker-compose up -d --force-recreate',
@@ -228,7 +195,7 @@ class TestMainOrai(unittest.TestCase):
         for key in expected_CMD_MAP.keys():
             if key not in actual_CMD_MAP.keys() and key not in main.CMD_KEY_INVARIANT:
                 print(key)
-                  
+
         self.assertEqual(len(actual_CMD_MAP.keys()), len(main.CMD_KEY_INVARIANT) + len(expected_CMD_MAP.keys()))
         
       
