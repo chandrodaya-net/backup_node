@@ -114,7 +114,7 @@ def s3_upload(source_tar_file='source_tar_file?', destination='destination?'):
        It download source data file from the digital ocean space. 
     """
 
-    cmd_value = ["cd {volume_new}; s3cmd put {src} s3://{space}".format(volume_new=config.volume_new,
+    cmd_value = ["cd {volume_new}; s3cmd put {src} s3://{space} --multipart-chunk-size-mb=600".format(volume_new=config.volume_new,
                                                                          space=config.digital_ocean_space,
                                                                         src =source_tar_file)]
     return cmd_format(cmd_value, 's3_upload') 
@@ -196,7 +196,7 @@ def remove_docker_container():
 def force_recreate_docker_container(workspace):
     "This cmd is applicable only for orai"
 
-    return "cd {} ; docker-compose pull && docker-compose up -d --force-recreate".format(workspace)
+    return "cd {} ; docker-compose pull && docker-compose up -d --force-recreate ; sleep 2s".format(workspace)
 
 
 def force_recreate_docker_container_CUR():

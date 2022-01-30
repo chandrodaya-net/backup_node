@@ -34,7 +34,7 @@ class TestCommon(unittest.TestCase):
                             'run_backup_and_restart_sentry_node_CUR': 'run_backup_delete_local_copy; restart_sentry_node_CUR',
                             'run_backup_and_restart_sentry_node_NEW': 'run_backup_keep_local_copy; restart_sentry_node_NEW',
                              's3_download': 'cd /mnt/volume_fra1_02; s3cmd get s3://chandrodaya/source_file? source_file? ; tar -xzvf source_file? ; rm source_file?',                   
-                             's3_upload': 'cd /mnt/volume_fra1_02; s3cmd put source_tar_file? s3://chandrodaya', 
+                             's3_upload': 'cd /mnt/volume_fra1_02; s3cmd put source_tar_file? s3://chandrodaya --multipart-chunk-size-mb=600', 
                              'delete_repo_file': 's3cmd rm  s3://chandrodaya/file_name?',
                             'EXIT': 'Exit from the program'                    
                            }
@@ -174,8 +174,8 @@ class TestMainOrai(unittest.TestCase):
                             'priv_validator_laddr_config_valink_CUR': 'sed -i "s/^priv_validator_laddr *=.*/priv_validator_laddr = \\"tcp:\\/\\/0.0.0.0:1235\\" /" /mnt/volume_fra1_01/workspace/.oraid/config/config.toml',
                             'stop_node': 'docker stop orai_node ; sleep 1s; docker rm orai_node; sleep 1s',
                             'remove_docker_container': 'docker rm orai_node',
-                            'force_recreate_docker_container_NEW': 'cd /mnt/volume_fra1_02/workspace ; docker-compose pull && docker-compose up -d --force-recreate',
-                            'force_recreate_docker_container_CUR': 'cd /mnt/volume_fra1_01/workspace ; docker-compose pull && docker-compose up -d --force-recreate',
+                            'force_recreate_docker_container_NEW': 'cd /mnt/volume_fra1_02/workspace ; docker-compose pull && docker-compose up -d --force-recreate ; sleep 2s',
+                            'force_recreate_docker_container_CUR': 'cd /mnt/volume_fra1_01/workspace ; docker-compose pull && docker-compose up -d --force-recreate ; sleep 2s',
                             'delete_priv_keys': 'rm -f /mnt/volume_fra1_01/workspace/.oraid/config/node_key.json; rm -f /mnt/volume_fra1_01/workspace/.oraid/config/priv_validator_key.json; rm -f /mnt/volume_fra1_01/workspace/.oraid/data/priv_validator_state.json' ,
                             'backup_script': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/oraid cleanup?', 
                             'backup_script_and_keep_local_copy': 'sh /home/dau/workspace/python/github.com/dauTT/backup/backup_script.sh /mnt/volume_fra1_01/workspace chandrodaya  /mnt/volume_fra1_02/oraid false', 
