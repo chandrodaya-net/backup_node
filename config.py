@@ -13,7 +13,7 @@ log_level = "DEBUG" # DEBUG, INFO
 
 #########################################################################################
 # TELEGRAM OONFIG
-node_name = "digital-Juno-1 || 138.68.107.126"
+node_name = ""
 telegram_token = "" # bot identification
 telegram_chat_id = ""
 
